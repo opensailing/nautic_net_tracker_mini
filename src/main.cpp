@@ -38,14 +38,6 @@ int _prevPPS = LOW;
 unsigned long _ppsAt = 0;
 
 //
-// TDMA
-//
-SlotType _tdmaSlotType = SlotTypeRoverDiscovery;
-bool _activeSlots[NUM_SLOTS];
-unsigned long _tdmaSyncAt = 0;
-int _tdmaSlot = 0;
-
-//
 // Magnetometer and IMU
 //
 Adafruit_LIS3MDL lis3mdl;
@@ -91,16 +83,16 @@ void loop()
   //
   // GPS time sync
   //
-  tdmaSync();
+  loopCheckPPS();
   gpsRead();
 
   //
   // TDMA slot determination
   //
-  SlotType newSlotType = tdmaStartOfSlot();
+  tdma::SlotType newSlotType = tdma::startOfSlot();
   switch (newSlotType)
   {
-  case SlotTypeRoverDiscovery:
+  case tdma::SlotTypeRoverDiscovery:
     if (_state == StateUnconfiguredRover)
     {
       // Delay 0-80 ms and then attempt to TX discovery
@@ -109,18 +101,18 @@ void loop()
     }
     break;
 
-  case SlotTypeThisRoverData:
+  case tdma::SlotTypeThisRoverData:
     if (_state == StateConfiguredRover)
     {
       loraTxData();
     }
     break;
 
-  case SlotTypeRoverConfiguration:
+  case tdma::SlotTypeRoverConfiguration:
     if (_state == StateBase && _baseConfigQueueLength > 0)
     {
       // Pop off the head of the queue
-      int count = loraTx(_baseConfigQueue[0]);
+      loraTx(_baseConfigQueue[0]);
 
       // Shift the rest of the queue down
       _baseConfigQueueLength--;
@@ -157,7 +149,7 @@ void loop()
   }
 }
 
-void tdmaSync()
+void loopCheckPPS()
 {
   int pps = digitalRead(PIN_PPS);
   if (_prevPPS != pps)
@@ -169,7 +161,7 @@ void tdmaSync()
       int currentGPSSeconds = (_gpsSeconds + 1) % 60;
       if (currentGPSSeconds % 10 == 0)
       {
-        _tdmaSyncAt = micros();
+        tdma::syncNow();
         debugln("--- SYNC ---");
       }
 
@@ -185,30 +177,6 @@ void tdmaSync()
   {
     digitalWrite(LED_BUILTIN, LOW);
   }
-}
-
-SlotType tdmaStartOfSlot()
-{
-  if (_tdmaSyncAt != 0)
-  {
-    unsigned long syncedTime = micros() - _tdmaSyncAt;
-    int slot = currentSlot(syncedTime);
-
-    // Only move forward to the next slot, never backwards to a previous one
-    if (slot > _tdmaSlot || (slot == 0 && _tdmaSlot == (NUM_SLOTS - 1)))
-    {
-      _tdmaSlot = slot;
-      SlotType slotType = currentSlotType(slot, _activeSlots);
-
-      if (slotType != _tdmaSlotType)
-      {
-        _tdmaSlotType = slotType;
-        return slotType;
-      }
-    }
-  }
-
-  return SlotTypeNone;
 }
 
 void printChipId()
@@ -234,7 +202,7 @@ void printChipId()
   debugln(buf);
 };
 
-volatile int32_t getHardwareID()
+volatile uint32_t getHardwareID()
 {
   return *(volatile uint32_t *)0x0080A00C;
 }
@@ -245,12 +213,16 @@ int loraTx(LoRaPacket packet)
   pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
   pb_encode(&stream, LoRaPacket_fields, &packet);
 
+  unsigned long startedAt = millis();
   _rf95.send((uint8_t *)buffer, stream.bytes_written);
-  // _rf95.waitPacketSent();
+  _rf95.waitPacketSent();
+  long airtime = millis() - startedAt;
 
   debug("TX   -> ");
   debug(stream.bytes_written);
-  debug(": ");
+  debug(" (");
+  debug(airtime);
+  debug("ms): ");
   debugPacketType(packet);
 
   return stream.bytes_written;
@@ -356,26 +328,18 @@ void gpsRead()
   }
 }
 
-void tdmaClearSlots()
-{
-  for (unsigned int i = 0; i < NUM_SLOTS; i++)
-  {
-    _activeSlots[i] = false;
-  }
-}
-
 void becomeBase()
 {
   debugln("--- BASE ---");
   _state = StateBase;
-  tdmaClearSlots();
+  tdma::clearSlots();
 }
 
 void becomeRover()
 {
   debugln("--- ROVER ---");
   _state = StateUnconfiguredRover;
-  tdmaClearSlots();
+  tdma::clearSlots();
 }
 
 void baseHandleRoverDiscovery(LoRaPacket packet)
@@ -388,13 +352,13 @@ void baseHandleRoverDiscovery(LoRaPacket packet)
     config.slots[i] = _baseAvailableSlot + (10 * i);
   }
 
-  LoRaPacket packet;
-  packet.hardwareID = packet.hardwareID;
-  packet.payload.roverConfiguration = config;
-  packet.which_payload = LoRaPacket_roverConfiguration_tag;
+  LoRaPacket configPacket;
+  configPacket.hardwareID = packet.hardwareID;
+  configPacket.payload.roverConfiguration = config;
+  configPacket.which_payload = LoRaPacket_roverConfiguration_tag;
 
   // Enqueue for TX later
-  _baseConfigQueue[_baseConfigQueueLength] = packet;
+  _baseConfigQueue[_baseConfigQueueLength] = configPacket;
   _baseConfigQueueLength++;
 
   // Determine the next set of slots to hand out (2 through 9, inclusive)
@@ -416,11 +380,11 @@ void roverHandleConfiguration(LoRaPacket packet)
     return;
   }
 
-  tdmaClearSlots();
+  tdma::clearSlots();
 
   for (unsigned int i = 0; i < packet.payload.roverConfiguration.slots_count; i++)
   {
-    _activeSlots[packet.payload.roverConfiguration.slots[i]] = true;
+    tdma::enableSlot(packet.payload.roverConfiguration.slots[i]);
   }
 
   _state = StateConfiguredRover;

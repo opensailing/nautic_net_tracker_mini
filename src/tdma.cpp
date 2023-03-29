@@ -1,39 +1,77 @@
 #include <Arduino.h>
 #include "tdma.h"
 
-int currentSlot(unsigned long syncedTime)
+namespace tdma
 {
-    return (syncedTime / SLOT_US) % NUM_SLOTS;
-}
+    SlotType _tdmaSlotType = SlotTypeRoverDiscovery;
+    bool _activeSlots[NUM_SLOTS];
+    unsigned long _tdmaSyncAt = 0;
+    int _tdmaSlot = 0;
 
-unsigned long syncNow(int seconds, unsigned long syncedTime)
-{
-    // Determine expected slot
-    int slotsPerSecond = 1000 / SLOT_MS;
-    int minuteSlot = seconds * slotsPerSecond;
-    int slot = minuteSlot % NUM_SLOTS;
+    void clearSlots()
+    {
+        for (unsigned int i = 0; i < NUM_SLOTS; i++)
+        {
+            _activeSlots[i] = false;
+        }
+    }
 
-    // Determine the time of slot 0
-    int offset = slot * SLOT_US;
-    return syncedTime - offset;
-}
+    int currentSlot(unsigned long syncedTime)
+    {
+        return (syncedTime / SLOT_US) % NUM_SLOTS;
+    }
 
-SlotType currentSlotType(int slot, bool mySlots[])
-{
-    if ((slot % 10) == 0)
+    void syncNow()
     {
-        return SlotTypeRoverDiscovery;
+        _tdmaSyncAt = micros();
     }
-    else if ((slot % 10) == 1)
+
+    SlotType currentSlotType(int slot, bool mySlots[])
     {
-        return SlotTypeRoverConfiguration;
+        if ((slot % 10) == 0)
+        {
+            return SlotTypeRoverDiscovery;
+        }
+        else if ((slot % 10) == 1)
+        {
+            return SlotTypeRoverConfiguration;
+        }
+        else if (mySlots[slot])
+        {
+            return SlotTypeThisRoverData;
+        }
+        else
+        {
+            return SlotTypeOtherRoverData;
+        }
     }
-    else if (mySlots[slot])
+
+    SlotType startOfSlot()
     {
-        return SlotTypeThisRoverData;
+        if (_tdmaSyncAt != 0)
+        {
+            unsigned long syncedTime = micros() - _tdmaSyncAt;
+            int slot = currentSlot(syncedTime);
+
+            // Only move forward to the next slot, never backwards to a previous one
+            if (slot > _tdmaSlot || (slot == 0 && _tdmaSlot == (NUM_SLOTS - 1)))
+            {
+                _tdmaSlot = slot;
+                SlotType slotType = currentSlotType(slot, _activeSlots);
+
+                if (slotType != _tdmaSlotType)
+                {
+                    _tdmaSlotType = slotType;
+                    return slotType;
+                }
+            }
+        }
+
+        return SlotTypeNone;
     }
-    else
+
+    void enableSlot(unsigned int slot)
     {
-        return SlotTypeOtherRoverData;
+        _activeSlots[slot] = true;
     }
 }

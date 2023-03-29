@@ -21,10 +21,11 @@ void baseHandleRoverDiscovery(LoRaPacket packet);
 void becomeBase();
 void becomeRover();
 void debugPacketType(LoRaPacket packet);
-volatile int32_t getHardwareID();
+volatile uint32_t getHardwareID();
 void gpsRead();
 void gpsSetup();
 void gpsWaitForFix();
+void loopCheckPPS();
 int loraTx(LoRaPacket packet);
 void loraTxData();
 void loraTxDiscovery();
@@ -32,9 +33,6 @@ void printChipId();
 void radioSetup();
 void radioRx();
 void roverHandleConfiguration(LoRaPacket packet);
-SlotType tdmaStartOfSlot();
-void tdmaClearSlots();
-void tdmaSync();
 
 typedef enum
 {
