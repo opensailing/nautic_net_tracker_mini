@@ -10,6 +10,7 @@
 #include <Wire.h>
 
 #include "main.h"
+#include "debug.h"
 #include "gps.h"
 #include "tdma.h"
 #include "lora.pb.h"
