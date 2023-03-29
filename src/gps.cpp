@@ -1,9 +1,7 @@
 #include "gps.h"
 
-gps::GPS::GPS(Uart *serial, int pps_pin)
+gps::GPS::GPS(Uart *serial, int pps_pin) : gps_(Adafruit_GPS(serial)), pps_pin_(pps_pin)
 {
-    gps_ = Adafruit_GPS(serial);
-    pps_pin_ = pps_pin;
 }
 
 void gps::GPS::Setup()

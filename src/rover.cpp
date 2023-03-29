@@ -4,16 +4,16 @@
 #include "rover.h"
 #include "util.h"
 
-rover::Rover::Rover(radio::Radio radio)
+rover::Rover::Rover(radio::Radio radio, gps::GPS gps) : radio_(radio), gps_(gps)
 {
-    radio_ = radio;
 }
 
 void rover::Rover::HandleSlot(tdma::Slot slot)
 {
     if (state_ == RoverState::kUnconfigured && slot.type == tdma::SlotType::kRoverDiscovery)
     {
-        delay(random(80));
+        // Add 50ms random delay to prevent 100% collisions
+        delay(random(50));
         SendDiscovery();
     }
     else if (state_ == RoverState::kConfigured && IsMyTransmitSlot(slot))
@@ -40,8 +40,8 @@ void rover::Rover::SendData()
     RoverData data;
     data.heading = random(360);
     data.heel = random(200) - 100;
-    data.latitude = 40.0;
-    data.longitude = -70.0;
+    data.latitude = gps_.gps_.latitudeDegrees;
+    data.longitude = gps_.gps_.longitudeDegrees;
 
     LoRaPacket packet;
     packet.hardwareID = util::get_hardware_id();

@@ -2,9 +2,8 @@
 #include "debug.h"
 #include "tdma.h"
 
-base::Base::Base(radio::Radio radio)
+base::Base::Base(radio::Radio radio) : radio_(radio)
 {
-    radio_ = radio;
 }
 
 void base::Base::DiscoverRover(LoRaPacket packet)
