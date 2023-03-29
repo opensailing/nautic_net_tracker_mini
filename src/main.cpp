@@ -14,6 +14,8 @@
 #include "tdma.h"
 #include "lora.pb.h"
 
+tdma::TDMA kTDMA;
+
 //
 // State machine
 //
@@ -89,10 +91,10 @@ void loop()
   //
   // TDMA slot determination
   //
-  tdma::SlotType newSlotType = tdma::startOfSlot();
+  tdma::SlotType newSlotType = kTDMA.GetSlotTransition();
   switch (newSlotType)
   {
-  case tdma::SlotTypeRoverDiscovery:
+  case tdma::SlotType::kRoverDiscovery:
     if (_state == StateUnconfiguredRover)
     {
       // Delay 0-80 ms and then attempt to TX discovery
@@ -101,14 +103,14 @@ void loop()
     }
     break;
 
-  case tdma::SlotTypeThisRoverData:
+  case tdma::SlotType::kThisRoverData:
     if (_state == StateConfiguredRover)
     {
       loraTxData();
     }
     break;
 
-  case tdma::SlotTypeRoverConfiguration:
+  case tdma::SlotType::kRoverConfiguration:
     if (_state == StateBase && _baseConfigQueueLength > 0)
     {
       // Pop off the head of the queue
@@ -161,7 +163,7 @@ void loopCheckPPS()
       int currentGPSSeconds = (_gpsSeconds + 1) % 60;
       if (currentGPSSeconds % 10 == 0)
       {
-        tdma::syncNow();
+        kTDMA.SyncToGPS();
         debugln("--- SYNC ---");
       }
 
@@ -332,14 +334,14 @@ void becomeBase()
 {
   debugln("--- BASE ---");
   _state = StateBase;
-  tdma::clearSlots();
+  kTDMA.ClearTxSlots();
 }
 
 void becomeRover()
 {
   debugln("--- ROVER ---");
   _state = StateUnconfiguredRover;
-  tdma::clearSlots();
+  kTDMA.ClearTxSlots();
 }
 
 void baseHandleRoverDiscovery(LoRaPacket packet)
@@ -380,11 +382,11 @@ void roverHandleConfiguration(LoRaPacket packet)
     return;
   }
 
-  tdma::clearSlots();
+  kTDMA.ClearTxSlots();
 
   for (unsigned int i = 0; i < packet.payload.roverConfiguration.slots_count; i++)
   {
-    tdma::enableSlot(packet.payload.roverConfiguration.slots[i]);
+    kTDMA.EnableTxSlot(packet.payload.roverConfiguration.slots[i]);
   }
 
   _state = StateConfiguredRover;

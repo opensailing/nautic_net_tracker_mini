@@ -1,77 +1,81 @@
 #include <Arduino.h>
 #include "tdma.h"
 
-namespace tdma
+tdma::TDMA::TDMA()
 {
-    SlotType _tdmaSlotType = SlotTypeRoverDiscovery;
-    bool _activeSlots[NUM_SLOTS];
-    unsigned long _tdmaSyncAt = 0;
-    int _tdmaSlot = 0;
+}
 
-    void clearSlots()
+//
+// TX SLOTS
+//
+
+void tdma::TDMA::ClearTxSlots()
+{
+    for (unsigned int i = 0; i < kSlotCount; i++)
     {
-        for (unsigned int i = 0; i < NUM_SLOTS; i++)
-        {
-            _activeSlots[i] = false;
-        }
+        tx_slots_[i] = false;
     }
+}
 
-    int currentSlot(unsigned long syncedTime)
+void tdma::TDMA::EnableTxSlot(unsigned int slot)
+{
+    tx_slots_[slot] = true;
+}
+
+//
+// SLOT DETERMINATION
+//
+
+void tdma::TDMA::SyncToGPS()
+{
+    synced_at_ = micros();
+}
+
+int tdma::TDMA::CurrentSlotNumber(unsigned long synced_time)
+{
+    return (synced_time / kSlotDuration) % kSlotCount;
+}
+
+tdma::SlotType tdma::TDMA::CurrentSlotType(int slot, bool my_slots[])
+{
+    if ((slot % 10) == 0)
     {
-        return (syncedTime / SLOT_US) % NUM_SLOTS;
+        return SlotType::kRoverDiscovery;
     }
-
-    void syncNow()
+    else if ((slot % 10) == 1)
     {
-        _tdmaSyncAt = micros();
+        return SlotType::kRoverConfiguration;
     }
-
-    SlotType currentSlotType(int slot, bool mySlots[])
+    else if (my_slots[slot])
     {
-        if ((slot % 10) == 0)
-        {
-            return SlotTypeRoverDiscovery;
-        }
-        else if ((slot % 10) == 1)
-        {
-            return SlotTypeRoverConfiguration;
-        }
-        else if (mySlots[slot])
-        {
-            return SlotTypeThisRoverData;
-        }
-        else
-        {
-            return SlotTypeOtherRoverData;
-        }
+        return SlotType::kThisRoverData;
     }
-
-    SlotType startOfSlot()
+    else
     {
-        if (_tdmaSyncAt != 0)
-        {
-            unsigned long syncedTime = micros() - _tdmaSyncAt;
-            int slot = currentSlot(syncedTime);
+        return SlotType::kOtherRoverData;
+    }
+}
 
-            // Only move forward to the next slot, never backwards to a previous one
-            if (slot > _tdmaSlot || (slot == 0 && _tdmaSlot == (NUM_SLOTS - 1)))
+tdma::SlotType tdma::TDMA::GetSlotTransition()
+{
+    if (synced_at_ != 0)
+    {
+        unsigned long synced_time = micros() - synced_at_;
+        int slot = CurrentSlotNumber(synced_time);
+
+        // Only move forward to the next slot, never backwards to a previous one
+        if (slot > current_slot_number_ || (slot == 0 && current_slot_number_ == (kSlotCount - 1)))
+        {
+            current_slot_number_ = slot;
+            SlotType slot_type = CurrentSlotType(slot, tx_slots_);
+
+            if (slot_type != current_slot_type_)
             {
-                _tdmaSlot = slot;
-                SlotType slotType = currentSlotType(slot, _activeSlots);
-
-                if (slotType != _tdmaSlotType)
-                {
-                    _tdmaSlotType = slotType;
-                    return slotType;
-                }
+                current_slot_type_ = slot_type;
+                return slot_type;
             }
         }
-
-        return SlotTypeNone;
     }
 
-    void enableSlot(unsigned int slot)
-    {
-        _activeSlots[slot] = true;
-    }
+    return SlotType::kNone;
 }

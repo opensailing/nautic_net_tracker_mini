@@ -3,24 +3,38 @@
 
 namespace tdma
 {
-    const unsigned int NUM_SLOTS = 100;
-    const unsigned int SLOT_MS = 100;
-    const unsigned long SLOT_US = 100000;
-
-    typedef enum
+    enum class SlotType
     {
-        SlotTypeNone = 0b00000000,
-        SlotTypeRoverDiscovery = 0b00000001,
-        SlotTypeRoverConfiguration = 0b00000010,
-        SlotTypeThisRoverData = 0b00000100,
-        SlotTypeOtherRoverData = 0b00001000,
-    } SlotType;
+        kNone = 0b00000000,
+        kRoverDiscovery = 0b00000001,
+        kRoverConfiguration = 0b00000010,
+        kThisRoverData = 0b00000100,
+        kOtherRoverData = 0b00001000,
+    };
 
-    void clearSlots();
-    int currentSlot(unsigned long syncedTime);
-    SlotType currentSlotType(int slot, bool mySlots[]);
-    void enableSlot(unsigned int slot);
-    SlotType startOfSlot();
-    void syncNow();
+    class TDMA
+    {
+    public:
+        TDMA();
+
+        SlotType CurrentSlotType(int slot, bool my_slots[]);
+        SlotType GetSlotTransition();
+        void SyncToGPS();
+
+        void ClearTxSlots();
+        void EnableTxSlot(unsigned int slot);
+
+    private:
+        static const unsigned int kSlotCount = 100;
+        static const unsigned long kSlotDuration = 100000; // µs
+
+        unsigned long synced_at_ = 0;
+        int current_slot_number_ = 0;
+        SlotType current_slot_type_ = SlotType::kRoverDiscovery;
+
+        bool tx_slots_[kSlotCount];
+
+        int CurrentSlotNumber(unsigned long synced_time);
+    };
 }
 #endif
