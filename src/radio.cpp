@@ -79,7 +79,7 @@ bool radio::Radio::TryReceive(LoRaPacket *rx_packet)
             pb_istream_t stream = pb_istream_from_buffer(buffer, length);
             pb_decode(&stream, LoRaPacket_fields, rx_packet);
 
-            debug("\aRX <-   ");
+            debug("RX <-   ");
             debug(length);
             debug(" (");
             debug(kRF95.lastRssi());

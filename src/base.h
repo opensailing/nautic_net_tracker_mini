@@ -21,6 +21,7 @@ namespace base
         radio::Radio radio_;
 
         void DiscoverRover(LoRaPacket packet);
+        void PrintRoverData(LoRaPacket packet);
         bool TryPopConfigPacket(LoRaPacket *packet);
     };
 }

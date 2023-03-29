@@ -74,4 +74,22 @@ void base::Base::HandlePacket(LoRaPacket packet)
     {
         DiscoverRover(packet);
     }
+    else if (packet.which_payload == LoRaPacket_roverData_tag)
+    {
+        PrintRoverData(packet);
+    }
+}
+
+void base::Base::PrintRoverData(LoRaPacket packet)
+{
+    Serial.print("DATA: ");
+    Serial.print(packet.hardwareID);
+    Serial.print(",");
+    Serial.print(packet.payload.roverData.latitude);
+    Serial.print(",");
+    Serial.print(packet.payload.roverData.longitude);
+    Serial.print(",");
+    Serial.print(packet.payload.roverData.heading);
+    Serial.print(",");
+    Serial.println(packet.payload.roverData.heel);
 }
