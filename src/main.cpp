@@ -1,5 +1,4 @@
 #include <Adafruit_BusIO_Register.h>
-#include <Adafruit_GPS.h>
 #include <Adafruit_ISM330DHCX.h>
 #include <Adafruit_LIS3MDL.h>
 #include <Adafruit_Sensor.h>
@@ -11,6 +10,7 @@
 #include <Wire.h>
 
 #include "main.h"
+#include "gps.h"
 #include "tdma.h"
 #include "lora.pb.h"
 
@@ -19,7 +19,7 @@ tdma::TDMA kTDMA;
 //
 // State machine
 //
-State _state = StateNoFix;
+State kState = StateNoFix;
 
 //
 // Base station
@@ -31,13 +31,7 @@ int _baseConfigQueueLength = 0;
 //
 // GPS
 //
-#define GPSSerial Serial1
-const byte PIN_PPS = A5;
-
-Adafruit_GPS _gps(&GPSSerial);
-int _gpsSeconds = -1;
-int _prevPPS = LOW;
-unsigned long _ppsAt = 0;
+gps::GPS kGPS(&Serial1, A5);
 
 //
 // Magnetometer and IMU
@@ -65,19 +59,21 @@ void setup()
 
   // Status LED
   pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);
 
   // Serial debug
   debugBegin(115200);
+  // debugWait();
 
   // Radio
   radioSetup();
 
   // GPS
-  gpsSetup();
-  gpsWaitForFix();
+  kGPS.Setup();
+  kGPS.WaitForFix();
 
   // Transition to new state
-  _state = StateUnconfiguredRover;
+  kState = StateUnconfiguredRover;
 }
 
 void loop()
@@ -85,8 +81,16 @@ void loop()
   //
   // GPS time sync
   //
-  loopCheckPPS();
-  gpsRead();
+  int second = kGPS.GetSyncedSecond();
+  if (second != -1 && second % 10 == 0)
+  {
+    kTDMA.SyncToGPS();
+
+    debug("--- SYNC ");
+    debug(second);
+    debugln(" ---");
+  }
+  kGPS.Read();
 
   //
   // TDMA slot determination
@@ -95,7 +99,7 @@ void loop()
   switch (newSlotType)
   {
   case tdma::SlotType::kRoverDiscovery:
-    if (_state == StateUnconfiguredRover)
+    if (kState == StateUnconfiguredRover)
     {
       // Delay 0-80 ms and then attempt to TX discovery
       delay(random(80));
@@ -104,14 +108,14 @@ void loop()
     break;
 
   case tdma::SlotType::kThisRoverData:
-    if (_state == StateConfiguredRover)
+    if (kState == StateConfiguredRover)
     {
       loraTxData();
     }
     break;
 
   case tdma::SlotType::kRoverConfiguration:
-    if (_state == StateBase && _baseConfigQueueLength > 0)
+    if (kState == StateBase && _baseConfigQueueLength > 0)
     {
       // Pop off the head of the queue
       loraTx(_baseConfigQueue[0]);
@@ -151,36 +155,6 @@ void loop()
   }
 }
 
-void loopCheckPPS()
-{
-  int pps = digitalRead(PIN_PPS);
-  if (_prevPPS != pps)
-  {
-    if (pps == HIGH && _gpsSeconds != -1)
-    {
-      _ppsAt = micros();
-
-      int currentGPSSeconds = (_gpsSeconds + 1) % 60;
-      if (currentGPSSeconds % 10 == 0)
-      {
-        kTDMA.SyncToGPS();
-        debugln("--- SYNC ---");
-      }
-
-      // Turn on LED when PPS pulse occurs
-      digitalWrite(LED_BUILTIN, HIGH);
-    }
-
-    _prevPPS = pps;
-  }
-
-  // Turn off LED 100ms after PPS pulse
-  if (micros() - _ppsAt > 100000)
-  {
-    digitalWrite(LED_BUILTIN, LOW);
-  }
-}
-
 void printChipId()
 {
   // Source: https://microchip.my.site.com/s/article/Reading-unique-serial-number-on-SAM-D20-SAM-D21-SAM-R21-devices
@@ -215,10 +189,12 @@ int loraTx(LoRaPacket packet)
   pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
   pb_encode(&stream, LoRaPacket_fields, &packet);
 
+  digitalWrite(LED_BUILTIN, HIGH);
   unsigned long startedAt = millis();
   _rf95.send((uint8_t *)buffer, stream.bytes_written);
   _rf95.waitPacketSent();
   long airtime = millis() - startedAt;
+  digitalWrite(LED_BUILTIN, LOW);
 
   debug("TX   -> ");
   debug(stream.bytes_written);
@@ -293,54 +269,17 @@ void radioSetup()
   _rf95.setSpreadingFactor(RF95_SF);
 }
 
-void gpsSetup()
-{
-  // PPS input
-  pinMode(PIN_PPS, INPUT);
-
-  _gps.begin(9600);
-  _gps.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-  _gps.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
-}
-
-void gpsWaitForFix()
-{
-  digitalWrite(LED_BUILTIN, HIGH);
-
-  while (!_gps.fix)
-  {
-    gpsRead();
-  }
-
-  digitalWrite(LED_BUILTIN, LOW);
-}
-
-void gpsRead()
-{
-  _gps.read();
-  if (_gps.newNMEAreceived())
-  {
-    if (_gps.parse(_gps.lastNMEA()))
-    {
-      if (_gps.fix)
-      {
-        _gpsSeconds = _gps.seconds;
-      }
-    }
-  }
-}
-
 void becomeBase()
 {
   debugln("--- BASE ---");
-  _state = StateBase;
+  kState = StateBase;
   kTDMA.ClearTxSlots();
 }
 
 void becomeRover()
 {
   debugln("--- ROVER ---");
-  _state = StateUnconfiguredRover;
+  kState = StateUnconfiguredRover;
   kTDMA.ClearTxSlots();
 }
 
@@ -389,7 +328,7 @@ void roverHandleConfiguration(LoRaPacket packet)
     kTDMA.EnableTxSlot(packet.payload.roverConfiguration.slots[i]);
   }
 
-  _state = StateConfiguredRover;
+  kState = StateConfiguredRover;
 }
 
 void radioRx()
@@ -411,12 +350,12 @@ void radioRx()
       debug(": ");
       debugPacketType(packet);
 
-      if (_state == StateBase && packet.which_payload == LoRaPacket_roverDiscovery_tag)
+      if (kState == StateBase && packet.which_payload == LoRaPacket_roverDiscovery_tag)
       {
         baseHandleRoverDiscovery(packet);
       }
 
-      if (_state == StateUnconfiguredRover && packet.which_payload == LoRaPacket_roverConfiguration_tag)
+      if (kState == StateUnconfiguredRover && packet.which_payload == LoRaPacket_roverConfiguration_tag)
       {
         roverHandleConfiguration(packet);
       }
