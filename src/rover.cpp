@@ -8,6 +8,35 @@ rover::Rover::Rover(radio::Radio *radio, gps::GPS *gps) : radio_(radio), gps_(gp
 {
 }
 
+void rover::Rover::Setup()
+{
+    // https://learn.adafruit.com/lsm6dsox-and-ism330dhc-6-dof-imu/arduino
+    accel_.begin_I2C();
+    accel_.setAccelRange(LSM6DS_ACCEL_RANGE_2_G);
+    accel_.setAccelDataRate(LSM6DS_RATE_12_5_HZ);
+    accel_.setGyroDataRate(LSM6DS_RATE_SHUTDOWN);
+    accel_.configInt1(false, false, true); // accelerometer DRDY on INT1
+    accel_.configInt2(false, true, false); // gyro DRDY on INT2
+}
+
+void rover::Rover::Loop()
+{
+    if (accel_.accelerationAvailable())
+    {
+        sensors_event_t accel;
+        sensors_event_t gyro;
+        sensors_event_t temp;
+        accel_.getEvent(&accel, &gyro, &temp);
+
+        // X is towards the sky, Y is towards port, Z is towards the bow
+        float angle_rad = atan2(accel.acceleration.y, accel.acceleration.x);
+        float angle_deg = angle_rad * 180 / PI;
+
+        heel_angle_deg_ -= heel_angle_deg_ / kHeelAveraging;
+        heel_angle_deg_ += angle_deg / kHeelAveraging;
+    }
+}
+
 void rover::Rover::HandleSlot(tdma::Slot slot)
 {
     if (state_ == RoverState::kUnconfigured && slot.type == tdma::SlotType::kRoverDiscovery)
@@ -40,7 +69,7 @@ void rover::Rover::SendData()
 
     RoverData data;
     data.heading = random(360);
-    data.heel = random(200) - 100;
+    data.heel = (int)(heel_angle_deg_ * 10);
     data.latitude = gps_->gps_.latitudeDegrees;
     data.longitude = gps_->gps_.longitudeDegrees;
 

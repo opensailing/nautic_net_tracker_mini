@@ -36,6 +36,9 @@ void setup()
   // Radio
   kRadio.Setup();
 
+  // Rover
+  kRover.Setup();
+
   // GPS
   kGPS.Setup();
   kGPS.WaitForFix();
@@ -106,5 +109,19 @@ void loop()
       kMode = Mode::kRover;
       kRover.ResetConfiguration();
     }
+  }
+
+  //
+  // Give some processor time
+  //
+  switch (kMode)
+  {
+  case Mode::kRover:
+    kRover.Loop();
+    break;
+
+  case Mode::kBase:
+    // nothing yet
+    break;
   }
 }
