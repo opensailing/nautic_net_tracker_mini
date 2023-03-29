@@ -3,17 +3,15 @@
 #include <Adafruit_LIS3MDL.h>
 #include <Adafruit_Sensor.h>
 #include <Arduino.h>
-#include <pb_encode.h>
-#include <pb_decode.h>
-#include <RH_RF95.h>
 #include <SPI.h>
 #include <Wire.h>
 
-#include "main.h"
 #include "debug.h"
 #include "gps.h"
-#include "tdma.h"
 #include "lora.pb.h"
+#include "main.h"
+#include "radio.h"
+#include "tdma.h"
 
 tdma::TDMA kTDMA;
 
@@ -44,14 +42,7 @@ Adafruit_ISM330DHCX ism330dhcx;
 // Radio
 // https://learn.adafruit.com/adafruit-feather-m0-radio-with-lora-radio-module/using-the-rfm-9x-radio
 //
-#define RFM95_CS 8
-#define RFM95_RST 4
-#define RFM95_INT 3
-#define RF95_FREQ 915.0
-#define RF95_SF 7
-#define RF95_SBW 500000
-#define RF95_POWER 20
-RH_RF95 _rf95(RFM95_CS, RFM95_INT);
+radio::Radio kRadio;
 
 void setup()
 {
@@ -67,7 +58,7 @@ void setup()
   // debugWait();
 
   // Radio
-  radioSetup();
+  kRadio.Setup();
 
   // GPS
   kGPS.Setup();
@@ -119,7 +110,7 @@ void loop()
     if (kState == StateBase && _baseConfigQueueLength > 0)
     {
       // Pop off the head of the queue
-      loraTx(_baseConfigQueue[0]);
+      kRadio.Send(_baseConfigQueue[0]);
 
       // Shift the rest of the queue down
       _baseConfigQueueLength--;
@@ -137,7 +128,19 @@ void loop()
   //
   // Radio RX
   //
-  radioRx();
+  LoRaPacket rx_packet;
+  if (kRadio.TryReceive(&rx_packet))
+  {
+    if (kState == StateBase && rx_packet.which_payload == LoRaPacket_roverDiscovery_tag)
+    {
+      baseHandleRoverDiscovery(rx_packet);
+    }
+
+    if (kState == StateUnconfiguredRover && rx_packet.which_payload == LoRaPacket_roverConfiguration_tag)
+    {
+      roverHandleConfiguration(rx_packet);
+    }
+  }
 
   //
   // Serial commands
@@ -184,29 +187,6 @@ volatile uint32_t getHardwareID()
   return *(volatile uint32_t *)0x0080A00C;
 }
 
-int loraTx(LoRaPacket packet)
-{
-  uint8_t buffer[RH_RF95_MAX_MESSAGE_LEN];
-  pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
-  pb_encode(&stream, LoRaPacket_fields, &packet);
-
-  digitalWrite(LED_BUILTIN, HIGH);
-  unsigned long startedAt = millis();
-  _rf95.send((uint8_t *)buffer, stream.bytes_written);
-  _rf95.waitPacketSent();
-  long airtime = millis() - startedAt;
-  digitalWrite(LED_BUILTIN, LOW);
-
-  debug("TX   -> ");
-  debug(stream.bytes_written);
-  debug(" (");
-  debug(airtime);
-  debug("ms): ");
-  debugPacketType(packet);
-
-  return stream.bytes_written;
-}
-
 void loraTxDiscovery()
 {
   RoverDiscovery discovery;
@@ -216,7 +196,7 @@ void loraTxDiscovery()
   packet.payload.roverDiscovery = discovery;
   packet.which_payload = LoRaPacket_roverDiscovery_tag;
 
-  loraTx(packet);
+  kRadio.Send(packet);
 }
 
 void loraTxData()
@@ -232,42 +212,7 @@ void loraTxData()
   packet.payload.roverData = data;
   packet.which_payload = LoRaPacket_roverData_tag;
 
-  loraTx(packet);
-}
-
-void radioSetup()
-{
-  pinMode(RFM95_RST, OUTPUT);
-
-  // Manually reset radio
-  digitalWrite(RFM95_RST, HIGH);
-  delay(100);
-  digitalWrite(RFM95_RST, LOW);
-  delay(10);
-  digitalWrite(RFM95_RST, HIGH);
-  delay(10);
-
-  while (!_rf95.init())
-  {
-    debugln("LoRa radio init failed");
-    while (1)
-      ;
-  }
-  debugln("LoRa radio init OK!");
-
-  if (!_rf95.setFrequency(RF95_FREQ))
-  {
-    debugln("setFrequency failed");
-    while (1)
-      ;
-  }
-
-  debug("Set Freq to: ");
-  debugln(RF95_FREQ);
-
-  _rf95.setTxPower(RF95_POWER, false);
-  _rf95.setSignalBandwidth(RF95_SBW);
-  _rf95.setSpreadingFactor(RF95_SF);
+  kRadio.Send(packet);
 }
 
 void becomeBase()
@@ -330,55 +275,4 @@ void roverHandleConfiguration(LoRaPacket packet)
   }
 
   kState = StateConfiguredRover;
-}
-
-void radioRx()
-{
-  if (_rf95.available())
-  {
-    // Should be a message for us now
-    uint8_t buffer[RH_RF95_MAX_MESSAGE_LEN];
-    uint8_t length = sizeof(buffer);
-
-    if (_rf95.recv(buffer, &length))
-    {
-      LoRaPacket packet;
-      pb_istream_t stream = pb_istream_from_buffer(buffer, length);
-      pb_decode(&stream, LoRaPacket_fields, &packet);
-
-      debug("RX <-   ");
-      debug(length);
-      debug(": ");
-      debugPacketType(packet);
-
-      if (kState == StateBase && packet.which_payload == LoRaPacket_roverDiscovery_tag)
-      {
-        baseHandleRoverDiscovery(packet);
-      }
-
-      if (kState == StateUnconfiguredRover && packet.which_payload == LoRaPacket_roverConfiguration_tag)
-      {
-        roverHandleConfiguration(packet);
-      }
-    }
-  }
-}
-
-void debugPacketType(LoRaPacket packet)
-{
-  switch (packet.which_payload)
-  {
-  case LoRaPacket_roverDiscovery_tag:
-    debugln("RoverDiscovery");
-    break;
-  case LoRaPacket_roverData_tag:
-    debugln("RoverData");
-    break;
-  case LoRaPacket_roverConfiguration_tag:
-    debugln("RoverConfiguration");
-    break;
-  default:
-    debugln("Unknown");
-    break;
-  }
 }
