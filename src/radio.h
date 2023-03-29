@@ -17,7 +17,7 @@
 #define RFM95_RST 4
 #define RFM95_INT 3
 #define RF95_FREQ 915.0
-#define RF95_SF 7
+#define RF95_SF 9
 #define RF95_SBW 500000
 #define RF95_POWER 20
 
