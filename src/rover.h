@@ -20,15 +20,15 @@ namespace rover
     class Rover
     {
     public:
-        Rover(radio::Radio radio, gps::GPS gps);
+        Rover(radio::Radio *radio, gps::GPS *gps);
         void HandlePacket(LoRaPacket packet);
         void HandleSlot(tdma::Slot slot);
         void ResetConfiguration();
 
     private:
         RoverState state_;
-        radio::Radio radio_;
-        gps::GPS gps_;
+        radio::Radio *radio_;
+        gps::GPS *gps_;
         bool tx_slots_[tdma::kSlotCount];
         Adafruit_ISM330DHCX accel_;
 

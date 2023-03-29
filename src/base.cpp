@@ -2,7 +2,7 @@
 #include "debug.h"
 #include "tdma.h"
 
-base::Base::Base(radio::Radio radio) : radio_(radio)
+base::Base::Base(radio::Radio *radio) : radio_(radio)
 {
 }
 
@@ -63,7 +63,7 @@ void base::Base::HandleSlot(tdma::Slot slot)
         LoRaPacket config_packet;
         if (TryPopConfigPacket(&config_packet))
         {
-            radio_.Send(config_packet);
+            radio_->Send(config_packet);
         }
     }
 }
@@ -83,11 +83,11 @@ void base::Base::HandlePacket(LoRaPacket packet)
 void base::Base::PrintRoverData(LoRaPacket packet)
 {
     Serial.print("DATA: ");
-    Serial.print(packet.hardwareID);
+    Serial.print(packet.hardwareID, 16);
     Serial.print(",");
-    Serial.print(packet.payload.roverData.latitude);
+    Serial.print(packet.payload.roverData.latitude, 8);
     Serial.print(",");
-    Serial.print(packet.payload.roverData.longitude);
+    Serial.print(packet.payload.roverData.longitude, 8);
     Serial.print(",");
     Serial.print(packet.payload.roverData.heading);
     Serial.print(",");

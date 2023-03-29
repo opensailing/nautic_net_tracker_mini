@@ -16,9 +16,9 @@ Mode kMode = Mode::kRover;
 
 radio::Radio kRadio;
 gps::GPS kGPS(&Serial1, A5);
+rover::Rover kRover(&kRadio, &kGPS);
+base::Base kBase(&kRadio);
 tdma::TDMA kTDMA;
-rover::Rover kRover(kRadio, kGPS);
-base::Base kBase(kRadio);
 
 void setup()
 {

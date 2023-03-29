@@ -4,7 +4,7 @@
 #include "rover.h"
 #include "util.h"
 
-rover::Rover::Rover(radio::Radio radio, gps::GPS gps) : radio_(radio), gps_(gps)
+rover::Rover::Rover(radio::Radio *radio, gps::GPS *gps) : radio_(radio), gps_(gps)
 {
 }
 
@@ -32,23 +32,24 @@ void rover::Rover::SendDiscovery()
     packet.payload.roverDiscovery = discovery;
     packet.which_payload = LoRaPacket_roverDiscovery_tag;
 
-    radio_.Send(packet);
+    radio_->Send(packet);
 }
 
 void rover::Rover::SendData()
 {
+
     RoverData data;
     data.heading = random(360);
     data.heel = random(200) - 100;
-    data.latitude = gps_.gps_.latitudeDegrees;
-    data.longitude = gps_.gps_.longitudeDegrees;
+    data.latitude = gps_->gps_.latitudeDegrees;
+    data.longitude = gps_->gps_.longitudeDegrees;
 
     LoRaPacket packet;
     packet.hardwareID = util::get_hardware_id();
     packet.payload.roverData = data;
     packet.which_payload = LoRaPacket_roverData_tag;
 
-    radio_.Send(packet);
+    radio_->Send(packet);
 }
 
 void rover::Rover::HandlePacket(LoRaPacket packet)
