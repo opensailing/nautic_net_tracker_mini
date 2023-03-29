@@ -1,6 +1,10 @@
 #ifndef RADIO_H
 #define RADIO_H
 
+//
+// Docs:
+// https://learn.adafruit.com/adafruit-feather-m0-radio-with-lora-radio-module/using-the-rfm-9x-radio
+//
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include <RH_RF95.h>

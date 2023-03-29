@@ -76,16 +76,14 @@ bool radio::Radio::TryReceive(LoRaPacket *rx_packet)
 
         if (kRF95.recv(buffer, &length))
         {
-            LoRaPacket packet;
             pb_istream_t stream = pb_istream_from_buffer(buffer, length);
-            pb_decode(&stream, LoRaPacket_fields, &packet);
+            pb_decode(&stream, LoRaPacket_fields, rx_packet);
 
             debug("RX <-   ");
             debug(length);
             debug(": ");
-            DebugPacketType(packet);
+            DebugPacketType(*rx_packet);
 
-            rx_packet = &packet;
             return true;
         }
     }

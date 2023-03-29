@@ -5,38 +5,17 @@ tdma::TDMA::TDMA()
 {
 }
 
-//
-// TX SLOTS
-//
-
-void tdma::TDMA::ClearTxSlots()
-{
-    for (unsigned int i = 0; i < kSlotCount; i++)
-    {
-        tx_slots_[i] = false;
-    }
-}
-
-void tdma::TDMA::EnableTxSlot(unsigned int slot)
-{
-    tx_slots_[slot] = true;
-}
-
-//
-// SLOT DETERMINATION
-//
-
 void tdma::TDMA::SyncToGPS()
 {
     synced_at_ = micros();
 }
 
-int tdma::TDMA::CurrentSlotNumber(unsigned long synced_time)
+int tdma::TDMA::GetSlotNumber(unsigned long synced_time)
 {
     return (synced_time / kSlotDuration) % kSlotCount;
 }
 
-tdma::SlotType tdma::TDMA::CurrentSlotType(int slot, bool my_slots[])
+tdma::SlotType tdma::TDMA::GetSlotType(int slot)
 {
     if ((slot % 10) == 0)
     {
@@ -46,36 +25,31 @@ tdma::SlotType tdma::TDMA::CurrentSlotType(int slot, bool my_slots[])
     {
         return SlotType::kRoverConfiguration;
     }
-    else if (my_slots[slot])
-    {
-        return SlotType::kThisRoverData;
-    }
     else
     {
-        return SlotType::kOtherRoverData;
+        return SlotType::kRoverData;
     }
 }
 
-tdma::SlotType tdma::TDMA::GetSlotTransition()
+bool tdma::TDMA::TryGetSlotTransition(tdma::Slot *slot)
 {
     if (synced_at_ != 0)
     {
         unsigned long synced_time = micros() - synced_at_;
-        int slot = CurrentSlotNumber(synced_time);
+        int slot_num = GetSlotNumber(synced_time);
 
         // Only move forward to the next slot, never backwards to a previous one
-        if (slot > current_slot_number_ || (slot == 0 && current_slot_number_ == (kSlotCount - 1)))
+        if (slot_num > current_slot_number_ || (slot_num == 0 && current_slot_number_ == (kSlotCount - 1)))
         {
-            current_slot_number_ = slot;
-            SlotType slot_type = CurrentSlotType(slot, tx_slots_);
+            SlotType slot_type = GetSlotType(slot_num);
 
-            if (slot_type != current_slot_type_)
-            {
-                current_slot_type_ = slot_type;
-                return slot_type;
-            }
+            current_slot_number_ = slot_num;
+            current_slot_type_ = slot_type;
+
+            *slot = Slot{slot_num, slot_type};
+            return true;
         }
     }
 
-    return SlotType::kNone;
+    return false;
 }

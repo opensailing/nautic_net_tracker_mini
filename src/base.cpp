@@ -1,7 +1,10 @@
 #include "base.h"
+#include "debug.h"
+#include "tdma.h"
 
-base::Base::Base()
+base::Base::Base(radio::Radio radio)
 {
+    radio_ = radio;
 }
 
 void base::Base::DiscoverRover(LoRaPacket packet)
@@ -42,7 +45,7 @@ bool base::Base::TryPopConfigPacket(LoRaPacket *packet)
     }
 
     // Pop off the head of the queue
-    packet = &config_queue_[0];
+    *packet = config_queue_[0];
 
     // Shift the rest of the queue down
     config_queue_length_--;
@@ -52,4 +55,24 @@ bool base::Base::TryPopConfigPacket(LoRaPacket *packet)
     }
 
     return true;
+}
+
+void base::Base::HandleSlot(tdma::Slot slot)
+{
+    if (slot.type == tdma::SlotType::kRoverConfiguration)
+    {
+        LoRaPacket config_packet;
+        if (TryPopConfigPacket(&config_packet))
+        {
+            radio_.Send(config_packet);
+        }
+    }
+}
+
+void base::Base::HandlePacket(LoRaPacket packet)
+{
+    if (packet.which_payload == LoRaPacket_roverDiscovery_tag)
+    {
+        DiscoverRover(packet);
+    }
 }
