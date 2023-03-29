@@ -18,7 +18,7 @@ tdma::TDMA kTDMA;
 //
 // State machine
 //
-State kState = StateNoFix;
+State kState = State::kNoFix;
 
 //
 // Base station
@@ -65,7 +65,7 @@ void setup()
   kGPS.WaitForFix();
 
   // Transition to new state
-  kState = StateUnconfiguredRover;
+  kState = State::kUnconfiguredRover;
 }
 
 void loop()
@@ -91,7 +91,7 @@ void loop()
   switch (newSlotType)
   {
   case tdma::SlotType::kRoverDiscovery:
-    if (kState == StateUnconfiguredRover)
+    if (kState == State::kUnconfiguredRover)
     {
       // Delay 0-80 ms and then attempt to TX discovery
       delay(random(80));
@@ -100,14 +100,14 @@ void loop()
     break;
 
   case tdma::SlotType::kThisRoverData:
-    if (kState == StateConfiguredRover)
+    if (kState == State::kConfiguredRover)
     {
       loraTxData();
     }
     break;
 
   case tdma::SlotType::kRoverConfiguration:
-    if (kState == StateBase && _baseConfigQueueLength > 0)
+    if (kState == State::kBaseStation && _baseConfigQueueLength > 0)
     {
       // Pop off the head of the queue
       kRadio.Send(_baseConfigQueue[0]);
@@ -131,12 +131,12 @@ void loop()
   LoRaPacket rx_packet;
   if (kRadio.TryReceive(&rx_packet))
   {
-    if (kState == StateBase && rx_packet.which_payload == LoRaPacket_roverDiscovery_tag)
+    if (kState == State::kBaseStation && rx_packet.which_payload == LoRaPacket_roverDiscovery_tag)
     {
       baseHandleRoverDiscovery(rx_packet);
     }
 
-    if (kState == StateUnconfiguredRover && rx_packet.which_payload == LoRaPacket_roverConfiguration_tag)
+    if (kState == State::kUnconfiguredRover && rx_packet.which_payload == LoRaPacket_roverConfiguration_tag)
     {
       roverHandleConfiguration(rx_packet);
     }
@@ -217,15 +217,15 @@ void loraTxData()
 
 void becomeBase()
 {
-  debugln("--- BASE ---");
-  kState = StateBase;
+  debugln("--- BASE STATION ---");
+  kState = State::kBaseStation;
   kTDMA.ClearTxSlots();
 }
 
 void becomeRover()
 {
   debugln("--- ROVER ---");
-  kState = StateUnconfiguredRover;
+  kState = State::kUnconfiguredRover;
   kTDMA.ClearTxSlots();
 }
 
@@ -274,5 +274,5 @@ void roverHandleConfiguration(LoRaPacket packet)
     kTDMA.EnableTxSlot(packet.payload.roverConfiguration.slots[i]);
   }
 
-  kState = StateConfiguredRover;
+  kState = State::kConfiguredRover;
 }

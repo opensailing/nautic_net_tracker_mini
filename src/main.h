@@ -9,10 +9,10 @@ void loraTxDiscovery();
 void printChipId();
 void roverHandleConfiguration(LoRaPacket packet);
 
-typedef enum
+enum class State
 {
-    StateNoFix,
-    StateUnconfiguredRover,
-    StateConfiguredRover,
-    StateBase
-} State;
+    kNoFix,
+    kUnconfiguredRover,
+    kConfiguredRover,
+    kBaseStation
+};
