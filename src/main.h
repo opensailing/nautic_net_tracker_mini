@@ -1,6 +1,5 @@
 #include "lora.pb.h"
 
-void baseHandleRoverDiscovery(LoRaPacket packet);
 void becomeBase();
 void becomeRover();
 volatile uint32_t getHardwareID();

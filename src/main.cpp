@@ -6,6 +6,7 @@
 #include <SPI.h>
 #include <Wire.h>
 
+#include "base.h"
 #include "debug.h"
 #include "gps.h"
 #include "lora.pb.h"
@@ -23,9 +24,7 @@ State kState = State::kNoFix;
 //
 // Base station
 //
-int _baseAvailableSlot = 2;
-LoRaPacket _baseConfigQueue[20];
-int _baseConfigQueueLength = 0;
+base::Base kBase;
 
 //
 // GPS
@@ -77,10 +76,6 @@ void loop()
   if (second != -1 && second % 10 == 0)
   {
     kTDMA.SyncToGPS();
-
-    debug("--- SYNC ");
-    debug(second);
-    debugln(" ---");
   }
   kGPS.Read();
 
@@ -107,17 +102,10 @@ void loop()
     break;
 
   case tdma::SlotType::kRoverConfiguration:
-    if (kState == State::kBaseStation && _baseConfigQueueLength > 0)
+    LoRaPacket config_packet;
+    if (kState == State::kBaseStation && kBase.TryPopConfigPacket(&config_packet))
     {
-      // Pop off the head of the queue
-      kRadio.Send(_baseConfigQueue[0]);
-
-      // Shift the rest of the queue down
-      _baseConfigQueueLength--;
-      for (int i = 0; i < _baseConfigQueueLength; i++)
-      {
-        _baseConfigQueue[i] = _baseConfigQueue[i + 1];
-      }
+      kRadio.Send(config_packet);
     }
     break;
 
@@ -133,7 +121,7 @@ void loop()
   {
     if (kState == State::kBaseStation && rx_packet.which_payload == LoRaPacket_roverDiscovery_tag)
     {
-      baseHandleRoverDiscovery(rx_packet);
+      kBase.DiscoverRover(rx_packet);
     }
 
     if (kState == State::kUnconfiguredRover && rx_packet.which_payload == LoRaPacket_roverConfiguration_tag)
@@ -227,36 +215,6 @@ void becomeRover()
   debugln("--- ROVER ---");
   kState = State::kUnconfiguredRover;
   kTDMA.ClearTxSlots();
-}
-
-void baseHandleRoverDiscovery(LoRaPacket packet)
-{
-  // Build the config packet
-  RoverConfiguration config;
-  config.slots_count = 10;
-  for (int i = 0; i < 10; i++)
-  {
-    config.slots[i] = _baseAvailableSlot + (10 * i);
-  }
-
-  LoRaPacket configPacket;
-  configPacket.hardwareID = packet.hardwareID;
-  configPacket.payload.roverConfiguration = config;
-  configPacket.which_payload = LoRaPacket_roverConfiguration_tag;
-
-  // Enqueue for TX later
-  _baseConfigQueue[_baseConfigQueueLength] = configPacket;
-  _baseConfigQueueLength++;
-
-  // Determine the next set of slots to hand out (2 through 9, inclusive)
-  if (_baseAvailableSlot == 9)
-  {
-    _baseAvailableSlot = 2;
-  }
-  else
-  {
-    _baseAvailableSlot++;
-  }
 }
 
 void roverHandleConfiguration(LoRaPacket packet)
