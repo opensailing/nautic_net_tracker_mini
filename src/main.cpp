@@ -151,6 +151,7 @@ void loop()
 void loraTxDiscovery()
 {
   RoverDiscovery discovery;
+  discovery.dummy_field = 0;
 
   LoRaPacket packet;
   packet.hardwareID = util::get_hardware_id();
