@@ -1,7 +1,7 @@
+#include "config.h"
+
 #ifndef DEBUG_H
 #define DEBUG_H
-
-#define SERIAL_DEBUG
 
 #ifdef SERIAL_DEBUG
 #define debugBegin(x) Serial.begin(x)

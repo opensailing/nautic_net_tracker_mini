@@ -3,14 +3,15 @@
 
 #include <map>
 
+#include "config.h"
 #include "lora.pb.h"
 #include "radio.h"
 #include "tdma.h"
 
 namespace base
 {
-    // Configuration (SEE ALSO: tdma.h)
-    static const unsigned int kMaxRoverCount = 8; // The number of supported rovers; must divide evenly into tdma::kRoverDataSlotCount
+    // See config.h
+    static const unsigned int kMaxRoverCount = config::kMaxRoverCount;
 
     // Derived
     static const unsigned int kRoverSlotCount = tdma::kRoverDataSlotCount / kMaxRoverCount; // The number of TX slots allocated to each rover in one cycle
@@ -24,7 +25,7 @@ namespace base
         void HandleSlot(tdma::Slot slot);
 
     private:
-        int next_base_slot_ = 2;
+        int next_base_slot_ = 0;
         LoRaPacket config_queue_[20];
         int config_queue_length_ = 0;
         radio::Radio *radio_;

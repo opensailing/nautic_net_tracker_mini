@@ -28,15 +28,17 @@ namespace rover
         void ResetConfiguration();
 
     private:
-        RoverState state_;
         radio::Radio *radio_;
         gps::GPS *gps_;
-        bool tx_slots_[tdma::kSlotCount];
-        Adafruit_ISM330DHCX accel_;
-        float heel_angle_deg_;
+        RoverState state_;
+        Adafruit_ISM330DHCX accel_;       // Accelerometer/gyro
+        Adafruit_LIS3MDL magnet_;         // Magnetometer
+        bool tx_slots_[tdma::kSlotCount]; // Which slots this rover is configured to TX during
+        float heel_angle_deg_;            // Latest measurement from accelerometer
+        float compass_angle_deg_;         // Latest measurement from magnetometer
 
-        // Determined experimentally based on what "looks right"
-        static const int kHeelAveraging = 6;
+        static const int kHeelAveraging = 6;     // Determined experimentally based on what "looks right"
+        static const int kCompassAveraging = 10; // Determined experimentally based on what "looks right"
 
         void SendDiscovery();
         void SendData();

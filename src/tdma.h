@@ -3,14 +3,16 @@
 
 #include <set>
 
+#include "config.h"
+
 namespace tdma
 {
-    // TDMA configuration (SEE ALSO: base.h)
-    static const int kCycleDurationSec = 10;  // sec, must divide evenly into 60
-    static const int kSlotCount = 100;        // Total number of slots available
-    static const int kReservedSlotCount = 20; // Number of slots reserved for rover discovery + configuration (kRoverDiscoverySlots + kRoverConfigurationSlots)
-    static const std::set<int> kRoverDiscoverySlots = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90};
-    static const std::set<int> kRoverConfigurationSlots = {1, 11, 21, 31, 41, 51, 61, 71, 81, 91};
+    // See config.h
+    static const int kCycleDurationSec = config::kCycleDurationSec;   // sec, must divide evenly into 60
+    static const int kSlotCount = config::kSlotCount;                 // Total number of slots available
+    static const int kReservedSlotCount = config::kReservedSlotCount; // Number of slots reserved for rover discovery + configuration (kRoverDiscoverySlots + kRoverConfigurationSlots)
+    static const std::set<int> kRoverDiscoverySlots = config::kRoverDiscoverySlots;
+    static const std::set<int> kRoverConfigurationSlots = config::kRoverConfigurationSlots;
 
     // Derived
     static const int kRoverDataSlotCount = kSlotCount - kReservedSlotCount;  // Number of slots reserved for rover data
