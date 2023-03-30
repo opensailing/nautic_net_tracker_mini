@@ -66,10 +66,15 @@ void rover::Rover::SendDiscovery()
 
 void rover::Rover::SendData()
 {
+    // Negative integers are not efficient to encode in protobuf, so let's avoid -90° through 0° by normalizing
+    // the heel angle such that 0° is full counter-clockwise deflection (laying flat to the left), and 180°
+    // (integer value 1800) is full clockwise deflection (laying flat to the right). If the boat goes beyond these
+    // angles, we have bigger problems than optimizing dwell time.
+    int encoded_heel_angle = (int)((heel_angle_deg_ + 90.0) * 10);
 
     RoverData data;
     data.heading = random(360);
-    data.heel = (int)(heel_angle_deg_ * 10);
+    data.heel = encoded_heel_angle;
     data.latitude = gps_->gps_.latitudeDegrees;
     data.longitude = gps_->gps_.longitudeDegrees;
 
