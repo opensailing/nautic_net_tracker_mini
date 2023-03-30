@@ -50,10 +50,7 @@ void loop()
   // Sync TDMA at the top of every 10th second
   //
   int second = kGPS.GetSyncedSecond();
-  if (second != -1 && second % 10 == 0)
-  {
-    kTDMA.SyncToGPS();
-  }
+  kTDMA.SyncToGPS(second);
   kGPS.Read();
 
   //

@@ -8,12 +8,40 @@ base::Base::Base(radio::Radio *radio) : radio_(radio)
 
 void base::Base::DiscoverRover(LoRaPacket packet)
 {
+    int base_slot;
+
+    if (rover_slots_[packet.hardwareID] == 0)
+    {
+        debug("Found a new rover: ");
+        debugln(packet.hardwareID);
+
+        base_slot = next_base_slot_;
+        rover_slots_[packet.hardwareID] = base_slot;
+
+        // Determine the next set of slots to hand out
+        while (true)
+        {
+            next_base_slot_ = (next_base_slot_ + 1) % kRoverSlotInterval;
+
+            if (tdma::TDMA::GetSlotType(next_base_slot_) == tdma::SlotType::kRoverData)
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        debug("Rediscovered existing rover: ");
+        debugln(packet.hardwareID);
+        base_slot = rover_slots_[packet.hardwareID];
+    }
+
     // Build the config packet
     RoverConfiguration config;
-    config.slots_count = 10;
-    for (int i = 0; i < 10; i++)
+    config.slots_count = kRoverSlotCount;
+    for (unsigned int i = 0; i < kRoverSlotCount; i++)
     {
-        config.slots[i] = available_slot_ + (10 * i);
+        config.slots[i] = base_slot + (kRoverSlotInterval * i);
     }
 
     LoRaPacket config_packet;
@@ -24,16 +52,6 @@ void base::Base::DiscoverRover(LoRaPacket packet)
     // Enqueue for TX later
     config_queue_[config_queue_length_] = config_packet;
     config_queue_length_++;
-
-    // Determine the next set of slots to hand out (2 through 9, inclusive)
-    if (available_slot_ == 9)
-    {
-        available_slot_ = 2;
-    }
-    else
-    {
-        available_slot_++;
-    }
 }
 
 bool base::Base::TryPopConfigPacket(LoRaPacket *packet)

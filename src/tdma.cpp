@@ -5,9 +5,12 @@ tdma::TDMA::TDMA()
 {
 }
 
-void tdma::TDMA::SyncToGPS()
+void tdma::TDMA::SyncToGPS(int second)
 {
-    synced_at_ = micros();
+    if (second != -1 && second % kCycleDurationSec == 0)
+    {
+        synced_at_ = micros();
+    }
 }
 
 int tdma::TDMA::GetSlotNumber(unsigned long synced_time)
@@ -17,11 +20,11 @@ int tdma::TDMA::GetSlotNumber(unsigned long synced_time)
 
 tdma::SlotType tdma::TDMA::GetSlotType(int slot)
 {
-    if ((slot % 10) == 0)
+    if (kRoverDiscoverySlots.find(slot) != kRoverDiscoverySlots.end())
     {
         return SlotType::kRoverDiscovery;
     }
-    else if ((slot % 10) == 1)
+    else if (kRoverConfigurationSlots.find(slot) != kRoverConfigurationSlots.end())
     {
         return SlotType::kRoverConfiguration;
     }
