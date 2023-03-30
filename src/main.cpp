@@ -95,16 +95,28 @@ void loop()
   if (Serial.available())
   {
     char byte = Serial.read();
-    if (byte == 'b')
+    switch (byte)
     {
+    case 'b':
       debugln("--- BASE STATION ---");
       kMode = Mode::kBase;
-    }
-    else if (byte == 'r')
-    {
+      break;
+
+    case 'r':
       debugln("--- ROVER ---");
       kMode = Mode::kRover;
       kRover.ResetConfiguration();
+      break;
+
+    case 'c':
+      Serial.println("--- BEGIN COMPASS CALIBRATION ---");
+      kRover.BeginCompassCalibration();
+      break;
+
+    case 'f':
+      Serial.println("--- END COMPASS CALIBRATION ---");
+      kRover.FinishCompassCalibration();
+      break;
     }
   }
 

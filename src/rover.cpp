@@ -51,6 +51,10 @@ void rover::Rover::Loop()
 
         heel_angle_deg_ -= heel_angle_deg_ / kHeelAveraging;
         heel_angle_deg_ += angle_deg / kHeelAveraging;
+
+        latest_sensor_.acceleration = accel.acceleration;
+        latest_sensor_.gyro = gyro.gyro;
+        latest_sensor_.temperature = temp.temperature;
     }
 
     if (magnet_.magneticFieldAvailable())
@@ -59,15 +63,29 @@ void rover::Rover::Loop()
         magnet_.getEvent(&event);
 
         // X is towards the sky, Y is towards port, Z is towards the bow
-        float compass_rad = atan2(event.magnetic.y, event.magnetic.z);
-        float compass_deg = compass_rad * 180 / PI + 180.0;
+        float calibrated_y = event.magnetic.y - compass_y_offset_;
+        float calibrated_z = event.magnetic.z - compass_z_offset_;
 
-        compass_angle_deg_ -= compass_angle_deg_ / kCompassAveraging;
-        compass_angle_deg_ += compass_deg / kCompassAveraging;
+        float compass_rad = atan2(calibrated_y, calibrated_z);
+        float compass_deg = compass_rad * 180 / PI;
 
-        debug("Compass: ");
-        debug((int)compass_angle_deg_);
-        debugln("°");
+        // For generating plots
+        //
+        // Serial.print(calibrated_y);
+        // Serial.print("\t");
+        // Serial.print(calibrated_z);
+        // Serial.print("\t");
+        // Serial.println(compass_deg);
+
+        latest_sensor_.magnetic = event.magnetic;
+
+        if (is_calibrating_compass_)
+        {
+            compass_cal_y_min_ = min(compass_cal_y_min_, event.magnetic.y);
+            compass_cal_y_max_ = max(compass_cal_y_max_, event.magnetic.y);
+            compass_cal_z_min_ = min(compass_cal_z_min_, event.magnetic.z);
+            compass_cal_z_max_ = max(compass_cal_z_max_, event.magnetic.z);
+        }
     }
 }
 
@@ -154,4 +172,35 @@ void rover::Rover::ResetConfiguration()
 bool rover::Rover::IsMyTransmitSlot(tdma::Slot slot)
 {
     return (slot.type == tdma::SlotType::kRoverData && tx_slots_[slot.number]);
+}
+
+void rover::Rover::BeginCompassCalibration()
+{
+    is_calibrating_compass_ = true;
+    compass_cal_y_min_ = INFINITY;
+    compass_cal_y_max_ = -INFINITY;
+    compass_cal_z_min_ = INFINITY;
+    compass_cal_z_max_ = -INFINITY;
+}
+
+//
+// Implementing this algorithm:
+// https://www.fierceelectronics.com/components/compensating-for-tilt-hard-iron-and-soft-iron-effects
+//
+void rover::Rover::FinishCompassCalibration()
+{
+    if (compass_cal_y_min_ == INFINITY)
+    {
+        compass_y_offset_ = 0.0;
+        compass_z_offset_ = 0.0;
+        is_calibrating_compass_ = false;
+        is_compass_calibrated_ = false;
+    }
+    else
+    {
+        compass_y_offset_ = (compass_cal_y_min_ + compass_cal_y_max_) / 2.0; // beta
+        compass_z_offset_ = (compass_cal_z_min_ + compass_cal_z_max_) / 2.0; // alpha
+        is_calibrating_compass_ = false;
+        is_compass_calibrated_ = true;
+    }
 }
