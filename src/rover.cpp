@@ -10,13 +10,30 @@ rover::Rover::Rover(radio::Radio *radio, gps::GPS *gps) : radio_(radio), gps_(gp
 
 void rover::Rover::Setup()
 {
+    //
+    // Initialize accelerometer
     // https://learn.adafruit.com/lsm6dsox-and-ism330dhc-6-dof-imu/arduino
+    //
     accel_.begin_I2C();
     accel_.setAccelRange(LSM6DS_ACCEL_RANGE_2_G);
     accel_.setAccelDataRate(LSM6DS_RATE_12_5_HZ);
     accel_.setGyroDataRate(LSM6DS_RATE_SHUTDOWN);
     accel_.configInt1(false, false, true); // accelerometer DRDY on INT1
     accel_.configInt2(false, true, false); // gyro DRDY on INT2
+
+    //
+    // Initialize magnetometer
+    // https://learn.adafruit.com/lis3mdl-triple-axis-magnetometer/arduino
+    //
+    magnet_.begin_I2C();
+    magnet_.setPerformanceMode(LIS3MDL_MEDIUMMODE);
+    magnet_.setDataRate(LIS3MDL_DATARATE_10_HZ);
+    magnet_.setRange(LIS3MDL_RANGE_4_GAUSS);
+    magnet_.setIntThreshold(500);
+    magnet_.configInterrupt(false, false, true, // enable z axis
+                            true,               // polarity
+                            false,              // don't latch
+                            true);              // enabled!
 }
 
 void rover::Rover::Loop()
@@ -34,6 +51,23 @@ void rover::Rover::Loop()
 
         heel_angle_deg_ -= heel_angle_deg_ / kHeelAveraging;
         heel_angle_deg_ += angle_deg / kHeelAveraging;
+    }
+
+    if (magnet_.magneticFieldAvailable())
+    {
+        sensors_event_t event;
+        magnet_.getEvent(&event);
+
+        // X is towards the sky, Y is towards port, Z is towards the bow
+        float compass_rad = atan2(event.magnetic.y, event.magnetic.z);
+        float compass_deg = compass_rad * 180 / PI + 180.0;
+
+        compass_angle_deg_ -= compass_angle_deg_ / kCompassAveraging;
+        compass_angle_deg_ += compass_deg / kCompassAveraging;
+
+        debug("Compass: ");
+        debug((int)compass_angle_deg_);
+        debugln("°");
     }
 }
 
