@@ -1,3 +1,6 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
 #include <set>
 
 // Uncomment to enable debug() and debugln() macros for printing to Serial
@@ -15,3 +18,5 @@ namespace config
     // Base configuration
     static const unsigned int kMaxRoverCount = 8; // The number of supported rovers; must divide evenly into tdma::kRoverDataSlotCount
 }
+
+#endif
