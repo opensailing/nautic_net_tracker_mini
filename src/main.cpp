@@ -5,6 +5,7 @@
 #include "base.h"
 #include "debug.h"
 #include "gps.h"
+#include "imu.h"
 #include "lora.pb.h"
 #include "main.h"
 #include "radio.h"
@@ -15,8 +16,9 @@
 Mode kMode = Mode::kRover;
 
 radio::Radio kRadio;
+nautic_net::IMU kIMU;
 gps::GPS kGPS(&Serial1, A5);
-rover::Rover kRover(&kRadio, &kGPS);
+rover::Rover kRover(&kRadio, &kGPS, &kIMU);
 base::Base kBase(&kRadio);
 tdma::TDMA kTDMA;
 
@@ -32,6 +34,9 @@ void setup()
   // Serial debug
   debugBegin(115200);
   // debugWait();
+
+  // IMU
+  kIMU.Setup();
 
   // Radio
   kRadio.Setup();
@@ -52,6 +57,11 @@ void loop()
   int second = kGPS.GetSyncedSecond();
   kTDMA.SyncToGPS(second);
   kGPS.Read();
+
+  //
+  // Give the IMU a chance
+  //
+  kIMU.Loop();
 
   //
   // Handle slot transitions
@@ -110,12 +120,12 @@ void loop()
 
     case 'c':
       Serial.println("--- BEGIN COMPASS CALIBRATION ---");
-      kRover.BeginCompassCalibration();
+      kIMU.BeginCompassCalibration();
       break;
 
     case 'f':
       Serial.println("--- END COMPASS CALIBRATION ---");
-      kRover.FinishCompassCalibration();
+      kIMU.FinishCompassCalibration();
       break;
     }
   }
