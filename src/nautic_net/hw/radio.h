@@ -21,7 +21,7 @@
 #define RF95_SBW 500000
 #define RF95_POWER 20
 
-namespace radio
+namespace nautic_net::hw::radio
 {
     class Radio
     {

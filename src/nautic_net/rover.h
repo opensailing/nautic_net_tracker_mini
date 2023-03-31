@@ -1,13 +1,13 @@
 #ifndef ROVER_H
 #define ROVER_H
 
-#include "gps.h"
-#include "imu.h"
 #include "lora.pb.h"
-#include "radio.h"
-#include "tdma.h"
+#include "nautic_net/hw/gps.h"
+#include "nautic_net/hw/imu.h"
+#include "nautic_net/hw/radio.h"
+#include "nautic_net/tdma.h"
 
-namespace rover
+namespace nautic_net::rover
 {
     enum class RoverState
     {
@@ -18,7 +18,7 @@ namespace rover
     class Rover
     {
     public:
-        Rover(radio::Radio *radio, gps::GPS *gps, nautic_net::IMU *imu);
+        Rover(nautic_net::hw::radio::Radio *radio, nautic_net::hw::gps::GPS *gps, nautic_net::hw::imu::IMU *imu);
         void Setup();
         void Loop();
         void HandlePacket(LoRaPacket packet);
@@ -26,9 +26,9 @@ namespace rover
         void ResetConfiguration();
 
     private:
-        radio::Radio *radio_;
-        gps::GPS *gps_;
-        nautic_net::IMU *imu_;
+        nautic_net::hw::radio::Radio *radio_;
+        nautic_net::hw::gps::GPS *gps_;
+        nautic_net::hw::imu::IMU *imu_;
         RoverState state_;
 
         bool tx_slots_[tdma::kSlotCount]; // Which slots this rover is configured to TX during

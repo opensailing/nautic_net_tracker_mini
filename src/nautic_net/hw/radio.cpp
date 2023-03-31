@@ -1,13 +1,15 @@
 #include "debug.h"
 #include "radio.h"
 
+using namespace nautic_net::hw::radio;
+
 RH_RF95 kRF95(RFM95_CS, RFM95_INT);
 
-radio::Radio::Radio()
+Radio::Radio()
 {
 }
 
-void radio::Radio::Setup()
+void Radio::Setup()
 {
 
     pinMode(RFM95_RST, OUTPUT);
@@ -43,7 +45,7 @@ void radio::Radio::Setup()
     kRF95.setSpreadingFactor(RF95_SF);
 }
 
-size_t radio::Radio::Send(LoRaPacket packet)
+size_t Radio::Send(LoRaPacket packet)
 {
     uint8_t buffer[RH_RF95_MAX_MESSAGE_LEN];
     pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
@@ -66,7 +68,7 @@ size_t radio::Radio::Send(LoRaPacket packet)
     return stream.bytes_written;
 }
 
-bool radio::Radio::TryReceive(LoRaPacket *rx_packet)
+bool Radio::TryReceive(LoRaPacket *rx_packet)
 {
     if (kRF95.available())
     {
@@ -93,7 +95,7 @@ bool radio::Radio::TryReceive(LoRaPacket *rx_packet)
     return false;
 }
 
-void radio::Radio::DebugPacketType(LoRaPacket packet)
+void Radio::DebugPacketType(LoRaPacket packet)
 {
     switch (packet.which_payload)
     {

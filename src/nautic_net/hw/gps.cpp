@@ -1,10 +1,12 @@
 #include "gps.h"
 
-gps::GPS::GPS(Uart *serial, int pps_pin) : gps_(Adafruit_GPS(serial)), pps_pin_(pps_pin)
+using namespace nautic_net::hw::gps;
+
+GPS::GPS(Uart *serial, int pps_pin) : gps_(Adafruit_GPS(serial)), pps_pin_(pps_pin)
 {
 }
 
-void gps::GPS::Setup()
+void GPS::Setup()
 {
     // PPS input
     pinMode(pps_pin_, INPUT);
@@ -14,7 +16,7 @@ void gps::GPS::Setup()
     gps_.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
 }
 
-void gps::GPS::WaitForFix()
+void GPS::WaitForFix()
 {
     digitalWrite(LED_BUILTIN, HIGH);
 
@@ -26,7 +28,7 @@ void gps::GPS::WaitForFix()
     digitalWrite(LED_BUILTIN, LOW);
 }
 
-void gps::GPS::Read()
+void GPS::Read()
 {
     gps_.read();
     if (gps_.newNMEAreceived())
@@ -41,7 +43,7 @@ void gps::GPS::Read()
     }
 }
 
-int gps::GPS::GetSyncedSecond()
+int GPS::GetSyncedSecond()
 {
     int pps = digitalRead(pps_pin_);
     if (prev_pps_ != pps)

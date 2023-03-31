@@ -6,7 +6,7 @@
 // Uncomment to enable debug() and debugln() macros for printing to Serial
 // #define SERIAL_DEBUG
 
-namespace config
+namespace nautic_net::config
 {
     // TDMA configuration
     static const int kCycleDurationSec = 10;  // sec, must divide evenly into 60

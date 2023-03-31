@@ -2,22 +2,24 @@
 #include <Adafruit_Sensor.h>
 #include <Arduino.h>
 
-#include "base.h"
 #include "debug.h"
-#include "gps.h"
-#include "imu.h"
 #include "lora.pb.h"
 #include "main.h"
-#include "radio.h"
-#include "rover.h"
-#include "tdma.h"
-#include "util.h"
+#include "nautic_net/base.h"
+#include "nautic_net/hw/gps.h"
+#include "nautic_net/hw/imu.h"
+#include "nautic_net/hw/radio.h"
+#include "nautic_net/rover.h"
+#include "nautic_net/tdma.h"
+#include "nautic_net/util.h"
+
+using namespace nautic_net;
 
 Mode kMode = Mode::kRover;
 
-radio::Radio kRadio;
-nautic_net::IMU kIMU;
-gps::GPS kGPS(&Serial1, A5);
+hw::radio::Radio kRadio;
+hw::imu::IMU kIMU;
+hw::gps::GPS kGPS(&Serial1, A5);
 rover::Rover kRover(&kRadio, &kGPS, &kIMU);
 base::Base kBase(&kRadio);
 tdma::TDMA kTDMA;

@@ -1,11 +1,13 @@
 #include <Arduino.h>
-#include "tdma.h"
+#include "nautic_net/tdma.h"
 
-tdma::TDMA::TDMA()
+using namespace nautic_net::tdma;
+
+TDMA::TDMA()
 {
 }
 
-void tdma::TDMA::SyncToGPS(int second)
+void TDMA::SyncToGPS(int second)
 {
     if (second != -1 && second % kCycleDurationSec == 0)
     {
@@ -13,12 +15,12 @@ void tdma::TDMA::SyncToGPS(int second)
     }
 }
 
-int tdma::TDMA::GetSlotNumber(unsigned long synced_time)
+int TDMA::GetSlotNumber(unsigned long synced_time)
 {
     return (synced_time / kSlotDuration) % kSlotCount;
 }
 
-tdma::SlotType tdma::TDMA::GetSlotType(int slot)
+SlotType TDMA::GetSlotType(int slot)
 {
     if (kRoverDiscoverySlots.find(slot) != kRoverDiscoverySlots.end())
     {
@@ -34,7 +36,7 @@ tdma::SlotType tdma::TDMA::GetSlotType(int slot)
     }
 }
 
-bool tdma::TDMA::TryGetSlotTransition(tdma::Slot *slot)
+bool TDMA::TryGetSlotTransition(tdma::Slot *slot)
 {
     if (synced_at_ != 0)
     {

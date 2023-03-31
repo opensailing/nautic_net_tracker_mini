@@ -10,7 +10,7 @@
 #define ROVER_NORMAL_Y(value) -value.y
 #define ROVER_NORMAL_Z(value) value.x
 
-namespace nautic_net
+namespace nautic_net::hw::imu
 {
     class IMU
     {

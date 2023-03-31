@@ -1,10 +1,12 @@
 #include "imu.h"
 
-nautic_net::IMU::IMU()
+using namespace nautic_net::hw::imu;
+
+IMU::IMU()
 {
 }
 
-void nautic_net::IMU::Setup()
+void IMU::Setup()
 {
     //
     // Initialize accelerometer
@@ -33,7 +35,7 @@ void nautic_net::IMU::Setup()
                             true);              // enabled!
 }
 
-void nautic_net::IMU::Loop()
+void IMU::Loop()
 {
     static float prev_millis;
 
@@ -128,7 +130,7 @@ void nautic_net::IMU::Loop()
     }
 }
 
-void nautic_net::IMU::BeginCompassCalibration()
+void IMU::BeginCompassCalibration()
 {
     is_calibrating_compass_ = true;
     compass_x_calibration_ = 0.0;
@@ -146,7 +148,7 @@ void nautic_net::IMU::BeginCompassCalibration()
 // Implementing this algorithm:
 // https://www.fierceelectronics.com/components/compensating-for-tilt-hard-iron-and-soft-iron-effects
 //
-void nautic_net::IMU::FinishCompassCalibration()
+void IMU::FinishCompassCalibration()
 {
     if (compass_cal_x_min_ == INFINITY)
     {

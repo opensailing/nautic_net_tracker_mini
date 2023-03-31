@@ -1,12 +1,12 @@
 #include "debug.h"
 #include "util.h"
 
-volatile uint32_t util::get_hardware_id()
+volatile uint32_t nautic_net::util::get_hardware_id()
 {
     return *(volatile uint32_t *)0x0080A00C;
 }
 
-void util::print_serial_number()
+void nautic_net::util::print_serial_number()
 {
     // Source: https://microchip.my.site.com/s/article/Reading-unique-serial-number-on-SAM-D20-SAM-D21-SAM-R21-devices
     //

@@ -5,7 +5,7 @@
 
 #include "config.h"
 
-namespace tdma
+namespace nautic_net::tdma
 {
     // See config.h
     static const int kCycleDurationSec = config::kCycleDurationSec;   // sec, must divide evenly into 60

@@ -1,12 +1,14 @@
 #include "base.h"
 #include "debug.h"
-#include "tdma.h"
+#include "nautic_net/tdma.h"
 
-base::Base::Base(radio::Radio *radio) : radio_(radio)
+using namespace nautic_net::base;
+
+Base::Base(nautic_net::hw::radio::Radio *radio) : radio_(radio)
 {
 }
 
-void base::Base::DiscoverRover(LoRaPacket packet)
+void Base::DiscoverRover(LoRaPacket packet)
 {
     int base_slot;
 
@@ -54,7 +56,7 @@ void base::Base::DiscoverRover(LoRaPacket packet)
     config_queue_length_++;
 }
 
-bool base::Base::TryPopConfigPacket(LoRaPacket *packet)
+bool Base::TryPopConfigPacket(LoRaPacket *packet)
 {
     if (config_queue_length_ == 0)
     {
@@ -74,7 +76,7 @@ bool base::Base::TryPopConfigPacket(LoRaPacket *packet)
     return true;
 }
 
-void base::Base::HandleSlot(tdma::Slot slot)
+void Base::HandleSlot(tdma::Slot slot)
 {
     if (slot.type == tdma::SlotType::kRoverConfiguration)
     {
@@ -86,7 +88,7 @@ void base::Base::HandleSlot(tdma::Slot slot)
     }
 }
 
-void base::Base::HandlePacket(LoRaPacket packet)
+void Base::HandlePacket(LoRaPacket packet)
 {
     if (packet.which_payload == LoRaPacket_roverDiscovery_tag)
     {
@@ -98,7 +100,7 @@ void base::Base::HandlePacket(LoRaPacket packet)
     }
 }
 
-void base::Base::PrintRoverData(LoRaPacket packet)
+void Base::PrintRoverData(LoRaPacket packet)
 {
     Serial.print("DATA: ");
     Serial.print(packet.hardwareID, 16);

@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-namespace util
+namespace nautic_net::util
 {
     volatile uint32_t get_hardware_id();
     void print_serial_number();

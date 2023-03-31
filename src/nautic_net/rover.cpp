@@ -1,24 +1,26 @@
 #include <Arduino.h>
 
 #include "debug.h"
-#include "rover.h"
-#include "util.h"
+#include "nautic_net/rover.h"
+#include "nautic_net/util.h"
 
-rover::Rover::Rover(radio::Radio *radio, gps::GPS *gps, nautic_net::IMU *imu) : radio_(radio), gps_(gps), imu_(imu)
+using namespace nautic_net::rover;
+
+Rover::Rover(nautic_net::hw::radio::Radio *radio, nautic_net::hw::gps::GPS *gps, nautic_net::hw::imu::IMU *imu) : radio_(radio), gps_(gps), imu_(imu)
 {
 }
 
-void rover::Rover::Setup()
-{
-    // Nothing right now
-}
-
-void rover::Rover::Loop()
+void Rover::Setup()
 {
     // Nothing right now
 }
 
-void rover::Rover::HandleSlot(tdma::Slot slot)
+void Rover::Loop()
+{
+    // Nothing right now
+}
+
+void Rover::HandleSlot(tdma::Slot slot)
 {
     if (state_ == RoverState::kUnconfigured && slot.type == tdma::SlotType::kRoverDiscovery)
     {
@@ -32,7 +34,7 @@ void rover::Rover::HandleSlot(tdma::Slot slot)
     }
 }
 
-void rover::Rover::SendDiscovery()
+void Rover::SendDiscovery()
 {
     RoverDiscovery discovery;
     discovery.dummy_field = 0;
@@ -45,7 +47,7 @@ void rover::Rover::SendDiscovery()
     radio_->Send(packet);
 }
 
-void rover::Rover::SendData()
+void Rover::SendData()
 {
     // Negative integers are not efficient to encode in protobuf, so let's avoid -90° through 0° by normalizing
     // the heel angle such that 0° is full counter-clockwise deflection (laying flat to the left), and 180°
@@ -67,7 +69,7 @@ void rover::Rover::SendData()
     radio_->Send(packet);
 }
 
-void rover::Rover::HandlePacket(LoRaPacket packet)
+void Rover::HandlePacket(LoRaPacket packet)
 {
     // Ignore configs destined for other rovers
     if (packet.which_payload == LoRaPacket_roverConfiguration_tag && packet.hardwareID == util::get_hardware_id())
@@ -76,7 +78,7 @@ void rover::Rover::HandlePacket(LoRaPacket packet)
     }
 }
 
-void rover::Rover::Configure(LoRaPacket packet)
+void Rover::Configure(LoRaPacket packet)
 {
     ResetConfiguration();
 
@@ -88,7 +90,7 @@ void rover::Rover::Configure(LoRaPacket packet)
     state_ = RoverState::kConfigured;
 }
 
-void rover::Rover::ResetConfiguration()
+void Rover::ResetConfiguration()
 {
     for (unsigned int i = 0; i < tdma::kSlotCount; i++)
     {
@@ -98,7 +100,7 @@ void rover::Rover::ResetConfiguration()
     state_ = RoverState::kUnconfigured;
 }
 
-bool rover::Rover::IsMyTransmitSlot(tdma::Slot slot)
+bool Rover::IsMyTransmitSlot(tdma::Slot slot)
 {
     return (slot.type == tdma::SlotType::kRoverData && tx_slots_[slot.number]);
 }

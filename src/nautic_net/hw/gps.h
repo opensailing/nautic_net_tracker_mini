@@ -4,7 +4,7 @@
 #ifndef GPS_H
 #define GPS_H
 
-namespace gps
+namespace nautic_net::hw::gps
 {
     class GPS
     {
