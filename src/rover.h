@@ -10,6 +10,12 @@
 #include "radio.h"
 #include "tdma.h"
 
+// Measured:   X is towards the sky, Y is towards port, Z is towards the stern
+// Normalized: X is towards the bow, Y is towards port, Z is towards the sky
+#define ROVER_NORMAL_X(value) -value.z
+#define ROVER_NORMAL_Y(value) value.y
+#define ROVER_NORMAL_Z(value) value.x
+
 namespace rover
 {
     enum class RoverState
@@ -17,6 +23,8 @@ namespace rover
         kUnconfigured,
         kConfigured
     };
+
+    static const float kRadToDeg = 180 / PI;
 
     class Rover
     {
@@ -40,16 +48,20 @@ namespace rover
         float heel_angle_deg_;            // Latest measurement from accelerometer
         float compass_angle_deg_;         // Latest measurement from magnetometer
         bool is_calibrating_compass_;
-        sensors_event_t latest_sensor_;
         bool is_compass_calibrated_ = false;
 
+        float compass_cal_x_min_ = INFINITY;
+        float compass_cal_x_max_ = -INFINITY;
         float compass_cal_y_min_ = INFINITY;
         float compass_cal_y_max_ = -INFINITY;
         float compass_cal_z_min_ = INFINITY;
         float compass_cal_z_max_ = -INFINITY;
 
-        float compass_y_offset_;
-        float compass_z_offset_;
+        float compass_x_calibration_;
+        float compass_y_calibration_;
+        float compass_z_calibration_;
+        float pitch_; // theta
+        float roll_;  // phi
 
         static const int kHeelAveraging = 6;     // Determined experimentally based on what "looks right"
         static const int kCompassAveraging = 10; // Determined experimentally based on what "looks right"

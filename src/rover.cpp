@@ -17,7 +17,8 @@ void rover::Rover::Setup()
     accel_.begin_I2C();
     accel_.setAccelRange(LSM6DS_ACCEL_RANGE_2_G);
     accel_.setAccelDataRate(LSM6DS_RATE_12_5_HZ);
-    accel_.setGyroDataRate(LSM6DS_RATE_SHUTDOWN);
+    accel_.setGyroRange(LSM6DS_GYRO_RANGE_500_DPS);
+    accel_.setGyroDataRate(LSM6DS_RATE_12_5_HZ);
     accel_.configInt1(false, false, true); // accelerometer DRDY on INT1
     accel_.configInt2(false, true, false); // gyro DRDY on INT2
 
@@ -38,23 +39,39 @@ void rover::Rover::Setup()
 
 void rover::Rover::Loop()
 {
-    if (accel_.accelerationAvailable())
-    {
-        sensors_event_t accel;
-        sensors_event_t gyro;
-        sensors_event_t temp;
-        accel_.getEvent(&accel, &gyro, &temp);
+    static float prev_millis;
 
-        // X is towards the sky, Y is towards port, Z is towards the bow
-        float angle_rad = atan2(accel.acceleration.y, accel.acceleration.x);
-        float angle_deg = angle_rad * 180 / PI;
+    if (accel_.accelerationAvailable() && accel_.gyroscopeAvailable())
+    {
+        sensors_event_t accel_event;
+        sensors_event_t gyro_event;
+        sensors_event_t temp_event;
+        accel_.getEvent(&accel_event, &gyro_event, &temp_event);
+
+        float accel_x = ROVER_NORMAL_X(accel_event.acceleration); // towards bow
+        float accel_y = ROVER_NORMAL_Y(accel_event.acceleration); // towards port
+        float accel_z = ROVER_NORMAL_Z(accel_event.acceleration); // towards sky
+
+        // Use the gyro to estimate short-term changes
+        float gyro_x = ROVER_NORMAL_X(gyro_event.gyro); // towards bow
+        float gyro_y = ROVER_NORMAL_Y(gyro_event.gyro); // towards port
+
+        // Gyro reading is rad/sec, so we need to know how much time has elapsed since the last measurement
+        float dt = (millis() - prev_millis) / 1000.0;
+        prev_millis = millis();
+
+        // Calculate instantaneous pitch and roll
+        float pitch_m = -atan2(accel_x, accel_z); // pitch
+        float roll_m = -atan2(accel_y, accel_z);  // roll
+
+        // Smooth the data by taking the gyro into account
+        pitch_ = (pitch_ + gyro_y * dt) * .95 + pitch_m * .05; // damped pitch
+        roll_ = (roll_ - gyro_x * dt) * .95 + roll_m * .05;    // damped roll
+
+        float heel_angle_deg = -roll_ * kRadToDeg;
 
         heel_angle_deg_ -= heel_angle_deg_ / kHeelAveraging;
-        heel_angle_deg_ += angle_deg / kHeelAveraging;
-
-        latest_sensor_.acceleration = accel.acceleration;
-        latest_sensor_.gyro = gyro.gyro;
-        latest_sensor_.temperature = temp.temperature;
+        heel_angle_deg_ += heel_angle_deg / kHeelAveraging;
     }
 
     if (magnet_.magneticFieldAvailable())
@@ -62,30 +79,53 @@ void rover::Rover::Loop()
         sensors_event_t event;
         magnet_.getEvent(&event);
 
-        // X is towards the sky, Y is towards port, Z is towards the bow
-        float calibrated_y = event.magnetic.y - compass_y_offset_;
-        float calibrated_z = event.magnetic.z - compass_z_offset_;
+        // Normalize physical measurements to expected coordinate system
+        float raw_mag_x = ROVER_NORMAL_X(event.magnetic);
+        float raw_mag_y = ROVER_NORMAL_Y(event.magnetic);
+        float raw_mag_z = ROVER_NORMAL_Z(event.magnetic);
 
-        float compass_rad = atan2(calibrated_y, calibrated_z);
-        float compass_deg = compass_rad * 180 / PI;
+        // Calculate calibrated values
+        float mag_x = raw_mag_x + compass_x_calibration_;
+        float mag_y = raw_mag_y + compass_y_calibration_;
+        float mag_z = raw_mag_z + compass_z_calibration_;
 
-        // For generating plots
-        //
-        // Serial.print(calibrated_y);
-        // Serial.print("\t");
-        // Serial.print(calibrated_z);
-        // Serial.print("\t");
-        // Serial.println(compass_deg);
+        // Tilt compensation
+        float mag_x_compensated = mag_x * cos(pitch_) - mag_y * sin(roll_) * sin(pitch_) + mag_z * cos(roll_) * sin(pitch_);
+        float mag_y_compensated = mag_y * cos(roll_) + mag_z * sin(roll_);
 
-        latest_sensor_.magnetic = event.magnetic;
+        // Finally calculate compass angle
+        float compass_rad = atan2(mag_y_compensated, mag_x_compensated);
+        float compass_deg = compass_rad * kRadToDeg;
+
+        // TODO: Compass smoothing based on gyro
 
         if (is_calibrating_compass_)
         {
-            compass_cal_y_min_ = min(compass_cal_y_min_, event.magnetic.y);
-            compass_cal_y_max_ = max(compass_cal_y_max_, event.magnetic.y);
-            compass_cal_z_min_ = min(compass_cal_z_min_, event.magnetic.z);
-            compass_cal_z_max_ = max(compass_cal_z_max_, event.magnetic.z);
+            compass_cal_x_min_ = min(compass_cal_x_min_, mag_x);
+            compass_cal_x_max_ = max(compass_cal_x_max_, mag_x);
+            compass_cal_y_min_ = min(compass_cal_y_min_, mag_y);
+            compass_cal_y_max_ = max(compass_cal_y_max_, mag_y);
+            compass_cal_z_min_ = min(compass_cal_z_min_, mag_y);
+            compass_cal_z_max_ = max(compass_cal_z_max_, mag_y);
         }
+
+        Serial.print("/*");
+        Serial.print(pitch_ * 180.0 / PI);
+        Serial.print(",");
+        Serial.print(roll_ * 180.0 / PI);
+        Serial.print(",");
+        Serial.print(mag_x_compensated);
+        Serial.print(",");
+        Serial.print(mag_y_compensated);
+        Serial.print(",");
+        Serial.print(compass_deg < 0 ? compass_deg + 360.0 : compass_deg);
+        Serial.print(",");
+        Serial.print(mag_x);
+        Serial.print(",");
+        Serial.print(mag_y);
+        Serial.print(",");
+        Serial.print(mag_z);
+        Serial.println("*/");
     }
 }
 
@@ -177,6 +217,11 @@ bool rover::Rover::IsMyTransmitSlot(tdma::Slot slot)
 void rover::Rover::BeginCompassCalibration()
 {
     is_calibrating_compass_ = true;
+    compass_x_calibration_ = 0.0;
+    compass_y_calibration_ = 0.0;
+    compass_z_calibration_ = 0.0;
+    compass_cal_x_min_ = INFINITY;
+    compass_cal_x_max_ = -INFINITY;
     compass_cal_y_min_ = INFINITY;
     compass_cal_y_max_ = -INFINITY;
     compass_cal_z_min_ = INFINITY;
@@ -191,16 +236,18 @@ void rover::Rover::FinishCompassCalibration()
 {
     if (compass_cal_y_min_ == INFINITY)
     {
-        compass_y_offset_ = 0.0;
-        compass_z_offset_ = 0.0;
         is_calibrating_compass_ = false;
         is_compass_calibrated_ = false;
     }
     else
     {
-        compass_y_offset_ = (compass_cal_y_min_ + compass_cal_y_max_) / 2.0; // beta
-        compass_z_offset_ = (compass_cal_z_min_ + compass_cal_z_max_) / 2.0; // alpha
+        // Make these negative so it is simple addition to apply them
+        compass_x_calibration_ = -(compass_cal_x_min_ + compass_cal_x_max_) / 2.0; // alpha
+        compass_y_calibration_ = -(compass_cal_y_min_ + compass_cal_y_max_) / 2.0; // beta
+        compass_z_calibration_ = -(compass_cal_z_min_ + compass_cal_z_max_) / 2.0;
         is_calibrating_compass_ = false;
         is_compass_calibrated_ = true;
     }
+
+    // TODO: Save calibration in EEPROM
 }

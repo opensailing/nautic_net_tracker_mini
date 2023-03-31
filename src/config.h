@@ -4,7 +4,7 @@
 #include <set>
 
 // Uncomment to enable debug() and debugln() macros for printing to Serial
-#define SERIAL_DEBUG
+// #define SERIAL_DEBUG
 
 namespace config
 {
