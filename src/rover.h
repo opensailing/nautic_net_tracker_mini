@@ -10,10 +10,10 @@
 #include "radio.h"
 #include "tdma.h"
 
-// Measured:   X is towards the sky, Y is towards port, Z is towards the stern
+// Measured:   X is towards the sky, Y is towards starbord, Z is towards the bow
 // Normalized: X is towards the bow, Y is towards port, Z is towards the sky
-#define ROVER_NORMAL_X(value) -value.z
-#define ROVER_NORMAL_Y(value) value.y
+#define ROVER_NORMAL_X(value) value.z
+#define ROVER_NORMAL_Y(value) -value.y
 #define ROVER_NORMAL_Z(value) value.x
 
 namespace rover
