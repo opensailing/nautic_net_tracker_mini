@@ -41,8 +41,11 @@ void rover::Rover::Loop()
 {
     static float prev_millis;
 
-    if (accel_.accelerationAvailable() && accel_.gyroscopeAvailable())
+    if (accel_.accelerationAvailable() && accel_.gyroscopeAvailable() && magnet_.magneticFieldAvailable())
     {
+        //
+        // Gyro & accelerometer
+        //
         sensors_event_t accel_event;
         sensors_event_t gyro_event;
         sensors_event_t temp_event;
@@ -72,19 +75,19 @@ void rover::Rover::Loop()
 
         heel_angle_deg_ -= heel_angle_deg_ / kHeelAveraging;
         heel_angle_deg_ += heel_angle_deg / kHeelAveraging;
-    }
 
-    if (magnet_.magneticFieldAvailable())
-    {
-        sensors_event_t event;
-        magnet_.getEvent(&event);
+        //
+        // Magnetometer
+        //
+        sensors_event_t magnet_event;
+        magnet_.getEvent(&magnet_event);
 
         // Normalize physical measurements to expected coordinate system
-        float raw_mag_x = ROVER_NORMAL_X(event.magnetic);
-        float raw_mag_y = ROVER_NORMAL_Y(event.magnetic);
-        float raw_mag_z = ROVER_NORMAL_Z(event.magnetic);
+        float raw_mag_x = ROVER_NORMAL_X(magnet_event.magnetic);
+        float raw_mag_y = ROVER_NORMAL_Y(magnet_event.magnetic);
+        float raw_mag_z = ROVER_NORMAL_Z(magnet_event.magnetic);
 
-        // Calculate calibrated values
+        // Generate calibrated values
         float mag_x = raw_mag_x + compass_x_calibration_;
         float mag_y = raw_mag_y + compass_y_calibration_;
         float mag_z = raw_mag_z + compass_z_calibration_;
