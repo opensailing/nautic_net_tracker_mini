@@ -132,6 +132,12 @@ void loop()
       kRover.ResetConfiguration();
       break;
 
+    case 's':
+      Serial.println("--- STATUS ---");
+      Serial.print("Battery: ");
+      Serial.println(util::read_battery(), 2);
+      break;
+
     case 'c':
       Serial.println("--- BEGIN COMPASS CALIBRATION ---");
       kIMU.BeginCompassCalibration();

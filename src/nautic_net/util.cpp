@@ -28,3 +28,12 @@ void nautic_net::util::print_serial_number()
     sprintf(buf, "%8x%8x%8x%8x", (unsigned int)val1, (unsigned int)val2, (unsigned int)val3, (unsigned int)val4);
     debugln(buf);
 }
+
+float nautic_net::util::read_battery()
+{
+    float measured_vbat = analogRead(nautic_net::config::kPinBattery);
+    measured_vbat *= 2;    // we divided by 2, so multiply back
+    measured_vbat *= 3.3;  // Multiply by 3.3V, our reference voltage
+    measured_vbat /= 1024; // convert to voltage
+    return measured_vbat;
+}

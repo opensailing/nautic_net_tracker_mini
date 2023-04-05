@@ -41,8 +41,9 @@ namespace nautic_net::config
     static const bool kEnableIMULogging = false; // Output for Serial Studio
 
     // Pins
-    static const int kPinGPSPPS = A5;
-    static const int kPinBaseMode = A0;
+    static const int kPinGPSPPS = A5;   // Hardwire
+    static const int kPinBaseMode = A0; // Jumper
+    static const int kPinBattery = A7;  // Hardwired voltage divider (Vbat/2) on Feather M0
 }
 
 #endif
