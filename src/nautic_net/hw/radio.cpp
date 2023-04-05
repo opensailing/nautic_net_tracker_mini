@@ -40,9 +40,9 @@ void Radio::Setup()
     debug("Set Freq to: ");
     debugln(RF95_FREQ);
 
-    kRF95.setTxPower(RF95_POWER, false);
-    kRF95.setSignalBandwidth(RF95_SBW);
-    kRF95.setSpreadingFactor(RF95_SF);
+    kRF95.setTxPower(config::kLoraPower, false);
+    kRF95.setSignalBandwidth(config::kLoraSBW);
+    kRF95.setSpreadingFactor(config::kLoraSF);
 }
 
 size_t Radio::Send(LoRaPacket packet)
