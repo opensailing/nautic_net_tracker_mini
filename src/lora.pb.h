@@ -24,6 +24,8 @@ typedef struct _RoverDiscovery {
 typedef struct _RoverConfiguration {
     pb_size_t slots_count;
     int32_t slots[100];
+    uint32_t sbw;
+    uint32_t sf;
 } RoverConfiguration;
 
 typedef struct _LoRaPacket {
@@ -45,11 +47,11 @@ extern "C" {
 #define LoRaPacket_init_default                  {0, 0, {RoverData_init_default}}
 #define RoverData_init_default                   {0, 0, 0, 0}
 #define RoverDiscovery_init_default              {0}
-#define RoverConfiguration_init_default          {0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
+#define RoverConfiguration_init_default          {0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 0}
 #define LoRaPacket_init_zero                     {0, 0, {RoverData_init_zero}}
 #define RoverData_init_zero                      {0, 0, 0, 0}
 #define RoverDiscovery_init_zero                 {0}
-#define RoverConfiguration_init_zero             {0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
+#define RoverConfiguration_init_zero             {0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define RoverData_latitude_tag                   1
@@ -57,6 +59,8 @@ extern "C" {
 #define RoverData_heading_tag                    3
 #define RoverData_heel_tag                       4
 #define RoverConfiguration_slots_tag             1
+#define RoverConfiguration_sbw_tag               2
+#define RoverConfiguration_sf_tag                3
 #define LoRaPacket_hardwareID_tag                1
 #define LoRaPacket_roverData_tag                 2
 #define LoRaPacket_roverDiscovery_tag            3
@@ -88,7 +92,9 @@ X(a, STATIC,   SINGULAR, INT32,    heel,              4)
 #define RoverDiscovery_DEFAULT NULL
 
 #define RoverConfiguration_FIELDLIST(X, a) \
-X(a, STATIC,   REPEATED, INT32,    slots,             1)
+X(a, STATIC,   REPEATED, INT32,    slots,             1) \
+X(a, STATIC,   SINGULAR, UINT32,   sbw,               2) \
+X(a, STATIC,   SINGULAR, UINT32,   sf,                3)
 #define RoverConfiguration_CALLBACK NULL
 #define RoverConfiguration_DEFAULT NULL
 
@@ -104,8 +110,8 @@ extern const pb_msgdesc_t RoverConfiguration_msg;
 #define RoverConfiguration_fields &RoverConfiguration_msg
 
 /* Maximum encoded size of messages (where known) */
-#define LoRaPacket_size                          1108
-#define RoverConfiguration_size                  1100
+#define LoRaPacket_size                          1120
+#define RoverConfiguration_size                  1112
 #define RoverData_size                           27
 #define RoverDiscovery_size                      0
 

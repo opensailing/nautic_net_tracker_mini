@@ -22,6 +22,16 @@ void Rover::Loop()
 
 void Rover::HandleSlot(tdma::Slot slot)
 {
+    // Change radio parameters depending on the slot type
+    if (IsMyTransmitSlot(slot))
+    {
+        radio_->Configure(radio_config_);
+    }
+    else
+    {
+        radio_->Configure(config::kLoraDefaultConfig);
+    }
+
     if (state_ == RoverState::kUnconfigured && slot.type == tdma::SlotType::kRoverDiscovery)
     {
         // Add 50ms random delay to prevent 100% collisions
@@ -80,17 +90,26 @@ void Rover::HandlePacket(LoRaPacket packet, int rssi)
 
 void Rover::Configure(LoRaPacket packet)
 {
+    RoverConfiguration configPayload = packet.payload.roverConfiguration;
+
     ResetConfiguration();
 
     debugln("Got rover configuration: ");
+    debug(" - SBW: ");
+    debugln(configPayload.sbw);
+    debug(" - SF: ");
+    debugln(configPayload.sf);
 
-    for (unsigned int i = 0; i < packet.payload.roverConfiguration.slots_count; i++)
+    for (unsigned int i = 0; i < configPayload.slots_count; i++)
     {
-        debug(" - TX slot ");
-        debugln(packet.payload.roverConfiguration.slots[i]);
+        debug(" - TX slot: ");
+        debugln(configPayload.slots[i]);
 
-        tx_slots_[packet.payload.roverConfiguration.slots[i]] = true;
+        tx_slots_[configPayload.slots[i]] = true;
     }
+
+    radio_config_.sbw = configPayload.sbw;
+    radio_config_.sf = configPayload.sf;
 
     state_ = RoverState::kConfigured;
 }
@@ -101,6 +120,8 @@ void Rover::ResetConfiguration()
     {
         tx_slots_[i] = false;
     }
+
+    radio_config_ = config::kLoraDefaultConfig;
 
     state_ = RoverState::kUnconfigured;
 }

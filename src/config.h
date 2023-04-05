@@ -4,6 +4,8 @@
 #include <set>
 #include <Arduino.h>
 
+#include "nautic_net/hw/radio.h"
+
 // Uncomment to enable debug() and debugln() macros for printing to Serial
 // #define SERIAL_DEBUG
 
@@ -20,9 +22,19 @@ namespace nautic_net::config
     static const unsigned int kMaxRoverCount = 8; // The number of supported rovers; must divide evenly into tdma::kRoverDataSlotCount
 
     // LoRa configuration
-    static const uint8_t kLoraSF = 9;     // Spreading factor (7 through 12)
-    static const long kLoraSBW = 500000;  // Hz (125000, 250000, or 500000)
     static const uint8_t kLoraPower = 20; // dBm (0 through 20)
+
+    // The FIXED radio mode for rover discovery and configuration (slots 0 and 1)
+    static const nautic_net::hw::radio::Config kLoraDefaultConfig = {
+        .sbw = 500, // kHz (125, 250, or 500)
+        .sf = 9     // Spreading factor (7 through 12)
+    };
+
+    // The VARIABLE radio mode for rover data, which is handed out to the rovers from the base
+    static const nautic_net::hw::radio::Config kLoraRoverDataConfig = {
+        .sbw = 500, // kHz (125, 250, or 500)
+        .sf = 9     // Spreading factor (7 through 12)
+    };
 
     // Serial logging configuration
     static const bool kEnableBell = false;       // Print \a when receiving data

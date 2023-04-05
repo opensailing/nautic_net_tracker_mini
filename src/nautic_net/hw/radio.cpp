@@ -41,8 +41,23 @@ void Radio::Setup()
     debugln(RF95_FREQ);
 
     kRF95.setTxPower(config::kLoraPower, false);
-    kRF95.setSignalBandwidth(config::kLoraSBW);
-    kRF95.setSpreadingFactor(config::kLoraSF);
+
+    Configure(config::kLoraDefaultConfig);
+}
+
+void Radio::Configure(Config config)
+{
+    if (config.sbw != current_config_.sbw)
+    {
+        kRF95.setSignalBandwidth(config.sbw * 1000);
+    }
+
+    if (config.sf != current_config_.sf)
+    {
+        kRF95.setSpreadingFactor(config.sf);
+    }
+
+    current_config_ = config;
 }
 
 size_t Radio::Send(LoRaPacket packet)

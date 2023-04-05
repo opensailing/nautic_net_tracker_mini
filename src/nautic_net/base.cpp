@@ -39,6 +39,8 @@ void Base::DiscoverRover(LoRaPacket packet)
 
     // Build the config packet
     RoverConfiguration config;
+    config.sf = config::kLoraRoverDataConfig.sf;
+    config.sbw = config::kLoraRoverDataConfig.sbw;
     config.slots_count = kRoverSlotCount;
     for (unsigned int i = 0; i < kRoverSlotCount; i++)
     {
@@ -77,6 +79,15 @@ bool Base::TryPopConfigPacket(LoRaPacket *packet)
 
 void Base::HandleSlot(tdma::Slot slot)
 {
+    if (slot.type == tdma::SlotType::kRoverData)
+    {
+        radio_->Configure(config::kLoraRoverDataConfig);
+    }
+    else
+    {
+        radio_->Configure(config::kLoraDefaultConfig);
+    }
+
     if (slot.type == tdma::SlotType::kRoverConfiguration)
     {
         LoRaPacket config_packet;

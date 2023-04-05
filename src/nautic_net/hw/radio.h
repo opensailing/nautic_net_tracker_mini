@@ -20,6 +20,12 @@
 
 namespace nautic_net::hw::radio
 {
+    typedef struct
+    {
+        unsigned int sbw;
+        unsigned int sf;
+    } Config;
+
     class Radio
     {
     public:
@@ -27,8 +33,11 @@ namespace nautic_net::hw::radio
         void Setup();
         size_t Send(LoRaPacket packet);
         bool TryReceive(LoRaPacket *rx_packet, int *rssi);
+        void Configure(Config config);
 
     private:
+        Config current_config_;
+
         static void DebugPacketType(LoRaPacket packet);
     };
 }

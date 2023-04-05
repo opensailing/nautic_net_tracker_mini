@@ -2,6 +2,7 @@
 #define ROVER_H
 
 #include "lora.pb.h"
+#include "config.h"
 #include "nautic_net/hw/gps.h"
 #include "nautic_net/hw/imu.h"
 #include "nautic_net/hw/radio.h"
@@ -32,6 +33,7 @@ namespace nautic_net::rover
         RoverState state_;
 
         bool tx_slots_[tdma::kSlotCount]; // Which slots this rover is configured to TX during
+        nautic_net::hw::radio::Config radio_config_ = nautic_net::config::kLoraDefaultConfig;
 
         void SendDiscovery();
         void SendData();

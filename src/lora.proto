@@ -22,4 +22,6 @@ message RoverDiscovery {
 
 message RoverConfiguration {
     repeated int32 slots = 1;
+    uint32 sbw = 2;
+    uint32 sf = 3;
 }
