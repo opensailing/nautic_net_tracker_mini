@@ -68,11 +68,12 @@ size_t Radio::Send(LoRaPacket packet)
     return stream.bytes_written;
 }
 
-bool Radio::TryReceive(LoRaPacket *rx_packet)
+bool Radio::TryReceive(LoRaPacket *rx_packet, int *rssi)
 {
     if (kRF95.available())
     {
         // Should be a message for us now
+
         uint8_t buffer[RH_RF95_MAX_MESSAGE_LEN];
         uint8_t length = sizeof(buffer);
 
@@ -80,14 +81,14 @@ bool Radio::TryReceive(LoRaPacket *rx_packet)
         {
             pb_istream_t stream = pb_istream_from_buffer(buffer, length);
             pb_decode(&stream, LoRaPacket_fields, rx_packet);
+            *rssi = kRF95.lastRssi();
 
             debug("RX <-   ");
             debug(length);
             debug(" (");
-            debug(kRF95.lastRssi());
+            debug(*rssi);
             debug(" dBm): ");
             DebugPacketType(*rx_packet);
-
             return true;
         }
     }

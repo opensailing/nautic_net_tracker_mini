@@ -88,7 +88,7 @@ void Base::HandleSlot(tdma::Slot slot)
     }
 }
 
-void Base::HandlePacket(LoRaPacket packet)
+void Base::HandlePacket(LoRaPacket packet, int rssi)
 {
     if (packet.which_payload == LoRaPacket_roverDiscovery_tag)
     {
@@ -96,20 +96,26 @@ void Base::HandlePacket(LoRaPacket packet)
     }
     else if (packet.which_payload == LoRaPacket_roverData_tag)
     {
-        PrintRoverData(packet);
+        PrintRoverData(packet, rssi);
     }
 }
 
-void Base::PrintRoverData(LoRaPacket packet)
+void Base::PrintRoverData(LoRaPacket packet, int rssi)
 {
+    if (config::kEnableBell)
+    {
+        Serial.print('\a');
+    }
     Serial.print("DATA: ");
+    Serial.print(rssi);
+    Serial.print(',');
     Serial.print(packet.hardwareID, 16);
-    Serial.print(",");
+    Serial.print(',');
     Serial.print(packet.payload.roverData.latitude, 8);
-    Serial.print(",");
+    Serial.print(',');
     Serial.print(packet.payload.roverData.longitude, 8);
-    Serial.print(",");
+    Serial.print(',');
     Serial.print(packet.payload.roverData.heading);
-    Serial.print(",");
+    Serial.print(',');
     Serial.println(packet.payload.roverData.heel);
 }

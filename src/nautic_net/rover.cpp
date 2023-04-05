@@ -69,7 +69,7 @@ void Rover::SendData()
     radio_->Send(packet);
 }
 
-void Rover::HandlePacket(LoRaPacket packet)
+void Rover::HandlePacket(LoRaPacket packet, int rssi)
 {
     // Ignore configs destined for other rovers
     if (packet.which_payload == LoRaPacket_roverConfiguration_tag && packet.hardwareID == util::get_hardware_id())

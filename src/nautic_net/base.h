@@ -21,7 +21,7 @@ namespace nautic_net::base
     {
     public:
         Base(nautic_net::hw::radio::Radio *radio);
-        void HandlePacket(LoRaPacket packet);
+        void HandlePacket(LoRaPacket packet, int rssi);
         void HandleSlot(tdma::Slot slot);
 
     private:
@@ -32,7 +32,7 @@ namespace nautic_net::base
         std::map<int, int> rover_slots_;
 
         void DiscoverRover(LoRaPacket packet);
-        void PrintRoverData(LoRaPacket packet);
+        void PrintRoverData(LoRaPacket packet, int rssi);
         bool TryPopConfigPacket(LoRaPacket *packet);
     };
 }

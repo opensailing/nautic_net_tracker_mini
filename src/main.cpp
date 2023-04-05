@@ -87,16 +87,17 @@ void loop()
   // Handle received packets
   //
   LoRaPacket rx_packet;
-  if (kRadio.TryReceive(&rx_packet))
+  int rssi;
+  if (kRadio.TryReceive(&rx_packet, &rssi))
   {
     switch (kMode)
     {
     case Mode::kRover:
-      kRover.HandlePacket(rx_packet);
+      kRover.HandlePacket(rx_packet, rssi);
       break;
 
     case Mode::kBase:
-      kBase.HandlePacket(rx_packet);
+      kBase.HandlePacket(rx_packet, rssi);
       break;
     }
   }

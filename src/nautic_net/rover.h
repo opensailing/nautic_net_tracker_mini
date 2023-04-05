@@ -21,7 +21,7 @@ namespace nautic_net::rover
         Rover(nautic_net::hw::radio::Radio *radio, nautic_net::hw::gps::GPS *gps, nautic_net::hw::imu::IMU *imu);
         void Setup();
         void Loop();
-        void HandlePacket(LoRaPacket packet);
+        void HandlePacket(LoRaPacket packet, int rssi);
         void HandleSlot(tdma::Slot slot);
         void ResetConfiguration();
 

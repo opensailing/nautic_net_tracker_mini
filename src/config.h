@@ -17,6 +17,10 @@ namespace nautic_net::config
 
     // Base configuration
     static const unsigned int kMaxRoverCount = 8; // The number of supported rovers; must divide evenly into tdma::kRoverDataSlotCount
+
+    // Serial logging
+    static const bool kEnableBell = true;
+    static const bool kEnableIMULogging = false; // Output for Serial Studio
 }
 
 #endif

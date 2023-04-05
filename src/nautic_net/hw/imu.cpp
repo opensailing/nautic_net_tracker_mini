@@ -1,4 +1,5 @@
 #include "imu.h"
+#include "config.h"
 
 using namespace nautic_net::hw::imu;
 
@@ -110,23 +111,26 @@ void IMU::Loop()
             compass_cal_z_max_ = max(compass_cal_z_max_, mag_y);
         }
 
-        Serial.print("/*");
-        Serial.print(pitch_ * 180.0 / PI);
-        Serial.print(",");
-        Serial.print(roll_ * 180.0 / PI);
-        Serial.print(",");
-        Serial.print(mag_x_compensated);
-        Serial.print(",");
-        Serial.print(mag_y_compensated);
-        Serial.print(",");
-        Serial.print(compass_deg < 0 ? compass_deg + 360.0 : compass_deg);
-        Serial.print(",");
-        Serial.print(mag_x);
-        Serial.print(",");
-        Serial.print(mag_y);
-        Serial.print(",");
-        Serial.print(mag_z);
-        Serial.println("*/");
+        if (nautic_net::config::kEnableIMULogging)
+        {
+            Serial.print("/*");
+            Serial.print(pitch_ * 180.0 / PI);
+            Serial.print(",");
+            Serial.print(roll_ * 180.0 / PI);
+            Serial.print(",");
+            Serial.print(mag_x_compensated);
+            Serial.print(",");
+            Serial.print(mag_y_compensated);
+            Serial.print(",");
+            Serial.print(compass_deg < 0 ? compass_deg + 360.0 : compass_deg);
+            Serial.print(",");
+            Serial.print(mag_x);
+            Serial.print(",");
+            Serial.print(mag_y);
+            Serial.print(",");
+            Serial.print(mag_z);
+            Serial.println("*/");
+        }
     }
 }
 

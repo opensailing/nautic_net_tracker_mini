@@ -29,7 +29,7 @@ namespace nautic_net::hw::radio
         Radio();
         void Setup();
         size_t Send(LoRaPacket packet);
-        bool TryReceive(LoRaPacket *rx_packet);
+        bool TryReceive(LoRaPacket *rx_packet, int *rssi);
 
     private:
         static void DebugPacketType(LoRaPacket packet);
