@@ -82,8 +82,13 @@ void Rover::Configure(LoRaPacket packet)
 {
     ResetConfiguration();
 
+    debugln("Got rover configuration: ");
+
     for (unsigned int i = 0; i < packet.payload.roverConfiguration.slots_count; i++)
     {
+        debug(" - TX slot ");
+        debugln(packet.payload.roverConfiguration.slots[i]);
+
         tx_slots_[packet.payload.roverConfiguration.slots[i]] = true;
     }
 
