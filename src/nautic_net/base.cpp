@@ -10,9 +10,9 @@ Base::Base(nautic_net::hw::radio::Radio *radio) : radio_(radio)
 
 void Base::DiscoverRover(LoRaPacket packet)
 {
-    int assigned_base_slot;
+    int rover_index = FindRoverIndex(packet.hardwareID);
 
-    if (rover_slots_[packet.hardwareID] == 0)
+    if (rover_index == -1)
     {
         debug("Found a new rover: ");
         debugln(packet.hardwareID);
@@ -20,61 +20,64 @@ void Base::DiscoverRover(LoRaPacket packet)
         // Determine the next set of slots to hand out
         while (true)
         {
-            next_base_slot_ = (next_base_slot_ + 1) % kRoverSlotInterval;
+            next_base_slot_ = (next_base_slot_ + 1) % nautic_net::tdma::kRoverSlotInterval;
 
             if (tdma::TDMA::GetSlotType(next_base_slot_) == tdma::SlotType::kRoverData)
             {
-                assigned_base_slot = next_base_slot_;
-                rover_slots_[packet.hardwareID] = assigned_base_slot;
                 break;
             }
+        }
+
+        // Wrap around if we have too many rovers
+        rover_index = rover_count_ % tdma::kMaxRoverCount;
+        rover_count_ = min(rover_count_ + 1, tdma::kMaxRoverCount);
+
+        rovers_[rover_index] = new RoverInfo(packet.hardwareID);
+        rovers_[rover_index]->radio_config_ = config::kLoraRoverDataConfig;
+
+        for (unsigned int i = 0; i < tdma::kRoverSlotCount; i++)
+        {
+            rovers_[rover_index]->slots_[i] = next_base_slot_ + (nautic_net::tdma::kRoverSlotInterval * i);
         }
     }
     else
     {
         debug("Rediscovered existing rover: ");
         debugln(packet.hardwareID);
-        assigned_base_slot = rover_slots_[packet.hardwareID];
     }
-
-    // Build the config packet
-    RoverConfiguration config;
-    config.sf = config::kLoraRoverDataConfig.sf;
-    config.sbw = config::kLoraRoverDataConfig.sbw;
-    config.slots_count = kRoverSlotCount;
-    for (unsigned int i = 0; i < kRoverSlotCount; i++)
-    {
-        config.slots[i] = assigned_base_slot + (kRoverSlotInterval * i);
-    }
-
-    LoRaPacket config_packet;
-    config_packet.hardwareID = packet.hardwareID;
-    config_packet.payload.roverConfiguration = config;
-    config_packet.which_payload = LoRaPacket_roverConfiguration_tag;
 
     // Enqueue for TX later
-    config_queue_[config_queue_length_] = config_packet;
-    config_queue_length_++;
+    rovers_[rover_index]->is_configured_ = false;
 }
 
 bool Base::TryPopConfigPacket(LoRaPacket *packet)
 {
-    if (config_queue_length_ == 0)
+    for (unsigned int i = 0; i < rover_count_; i++)
     {
-        return false;
+        RoverInfo *rover_info = rovers_[i];
+        if (!rover_info->is_configured_)
+        {
+            debug("Sending config to rover ");
+            debugln(rover_info->hardware_id_);
+
+            RoverConfiguration config;
+            config.sf = rover_info->radio_config_.sf;
+            config.sbw = rover_info->radio_config_.sbw;
+            config.slots_count = nautic_net::tdma::kRoverSlotCount;
+            for (unsigned int i = 0; i < nautic_net::tdma::kRoverSlotCount; i++)
+            {
+                config.slots[i] = rover_info->slots_[i];
+            }
+
+            packet->hardwareID = rover_info->hardware_id_;
+            packet->payload.roverConfiguration = config;
+            packet->which_payload = LoRaPacket_roverConfiguration_tag;
+
+            return true;
+        }
     }
 
-    // Pop off the head of the queue
-    *packet = config_queue_[0];
-
-    // Shift the rest of the queue down
-    config_queue_length_--;
-    for (int i = 0; i < config_queue_length_; i++)
-    {
-        config_queue_[i] = config_queue_[i + 1];
-    }
-
-    return true;
+    return false;
 }
 
 void Base::HandleSlot(tdma::Slot slot)
@@ -100,6 +103,13 @@ void Base::HandleSlot(tdma::Slot slot)
 
 void Base::HandlePacket(LoRaPacket packet, int rssi)
 {
+    int rover_index = FindRoverIndex(packet.hardwareID);
+    if (rover_index != -1 && !rovers_[rover_index]->is_configured_)
+    {
+        debugln("Rover was successfully configured");
+        rovers_[rover_index]->is_configured_ = true;
+    }
+
     if (packet.which_payload == LoRaPacket_roverDiscovery_tag)
     {
         DiscoverRover(packet);
@@ -128,4 +138,17 @@ void Base::PrintRoverData(LoRaPacket packet, int rssi)
     Serial.print(packet.payload.roverData.heading);
     Serial.print(',');
     Serial.println(packet.payload.roverData.heel);
+}
+
+int Base::FindRoverIndex(unsigned int hardware_id)
+{
+    for (unsigned int i = 0; i < rover_count_; i++)
+    {
+        if (rovers_[i]->hardware_id_ == hardware_id)
+        {
+            return i;
+        }
+    }
+
+    return -1;
 }
