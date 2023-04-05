@@ -9,11 +9,17 @@ IMU::IMU()
 
 void IMU::Setup()
 {
+    // In the base station, the IMU board may be omitted
+    successful_init_ = accel_.begin_I2C() && magnet_.begin_I2C();
+    if (!successful_init_)
+    {
+        return;
+    }
+
     //
-    // Initialize accelerometer
+    // Configure accelerometer
     // https://learn.adafruit.com/lsm6dsox-and-ism330dhc-6-dof-imu/arduino
     //
-    accel_.begin_I2C();
     accel_.setAccelRange(LSM6DS_ACCEL_RANGE_2_G);
     accel_.setAccelDataRate(LSM6DS_RATE_12_5_HZ);
     accel_.setGyroRange(LSM6DS_GYRO_RANGE_500_DPS);
@@ -22,10 +28,9 @@ void IMU::Setup()
     accel_.configInt2(false, true, false); // gyro DRDY on INT2
 
     //
-    // Initialize magnetometer
+    // Configure magnetometer
     // https://learn.adafruit.com/lis3mdl-triple-axis-magnetometer/arduino
     //
-    magnet_.begin_I2C();
     magnet_.setPerformanceMode(LIS3MDL_MEDIUMMODE);
     magnet_.setDataRate(LIS3MDL_DATARATE_10_HZ);
     magnet_.setRange(LIS3MDL_RANGE_4_GAUSS);
@@ -38,6 +43,11 @@ void IMU::Setup()
 
 void IMU::Loop()
 {
+    if (!successful_init_)
+    {
+        return;
+    }
+
     static float prev_millis;
 
     if (accel_.accelerationAvailable() && accel_.gyroscopeAvailable() && magnet_.magneticFieldAvailable())

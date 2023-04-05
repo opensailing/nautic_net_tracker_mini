@@ -1,7 +1,7 @@
 #ifndef IMU_H
 #define IMU_H
 
-#include <Adafruit_ISM330DHCX.h>
+#include <Adafruit_LSM6DSOX.h>
 #include <Adafruit_LIS3MDL.h>
 
 // Measured:   X is towards the sky, Y is towards starbord, Z is towards the bow
@@ -27,11 +27,12 @@ namespace nautic_net::hw::imu
     private:
         static constexpr float kRadToDeg = 180 / PI;
 
-        Adafruit_ISM330DHCX accel_; // Accelerometer/gyro
-        Adafruit_LIS3MDL magnet_;   // Magnetometer
+        Adafruit_LSM6DSOX accel_; // Accelerometer/gyro
+        Adafruit_LIS3MDL magnet_; // Magnetometer
 
         bool is_calibrating_compass_;
         bool is_compass_calibrated_ = false;
+        bool successful_init_ = false;
 
         float compass_cal_x_min_ = INFINITY;
         float compass_cal_x_max_ = -INFINITY;
