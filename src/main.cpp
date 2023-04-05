@@ -19,7 +19,7 @@ Mode kMode = Mode::kRover;
 
 hw::radio::Radio kRadio;
 hw::imu::IMU kIMU;
-hw::gps::GPS kGPS(&Serial1, A5);
+hw::gps::GPS kGPS(&Serial1, config::kPinGPSPPS);
 rover::Rover kRover(&kRadio, &kGPS, &kIMU);
 base::Base kBase(&kRadio);
 tdma::TDMA kTDMA;
@@ -32,6 +32,17 @@ void setup()
   // Status LED
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
+
+  // Determine initial mode - jumper A0 to ground to configure as base station
+  pinMode(config::kPinBaseMode, INPUT_PULLUP);
+  if (digitalRead(config::kPinBaseMode) == HIGH)
+  {
+    kMode = Mode::kRover;
+  }
+  else
+  {
+    kMode = Mode::kBase;
+  }
 
   // Serial debug
   debugBegin(115200);

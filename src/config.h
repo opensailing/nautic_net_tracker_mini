@@ -30,7 +30,7 @@ namespace nautic_net::config
         .sf = 9     // Spreading factor (7 through 12)
     };
 
-    // The VARIABLE radio mode for rover data, which is handed out to the rovers from the base
+    // The CONFIGURABLE radio mode for rover data, which is handed out to the rovers from the base
     static const nautic_net::hw::radio::Config kLoraRoverDataConfig = {
         .sbw = 500, // kHz (125, 250, or 500)
         .sf = 9     // Spreading factor (7 through 12)
@@ -39,6 +39,10 @@ namespace nautic_net::config
     // Serial logging configuration
     static const bool kEnableBell = false;       // Print \a when receiving data
     static const bool kEnableIMULogging = false; // Output for Serial Studio
+
+    // Pins
+    static const int kPinGPSPPS = A5;
+    static const int kPinBaseMode = A0;
 }
 
 #endif
