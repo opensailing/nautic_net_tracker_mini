@@ -73,12 +73,12 @@ void IMU::Loop()
         prev_millis = millis();
 
         // Calculate instantaneous pitch and roll
-        float pitch_m = -atan2(accel_x, accel_z); // pitch
-        float roll_m = -atan2(accel_y, accel_z);  // roll
+        float pitch_m = -atan2(accel_x, accel_z); // pitch (theta)
+        float roll_m = -atan2(accel_y, accel_z);  // roll (phi)
 
         // Smooth the data by taking the gyro into account
-        pitch_ = (pitch_ + gyro_y * dt) * .95 + pitch_m * .05; // damped pitch
-        roll_ = (roll_ - gyro_x * dt) * .95 + roll_m * .05;    // damped roll
+        pitch_ = (pitch_ + gyro_y * dt) * .95 + pitch_m * .05; // damped pitch (theta)
+        roll_ = (roll_ - gyro_x * dt) * .95 + roll_m * .05;    // damped roll (phi)
 
         float heel_angle_deg = -roll_ * kRadToDeg;
 
@@ -96,6 +96,16 @@ void IMU::Loop()
         float raw_mag_y = ROVER_NORMAL_Y(magnet_event.magnetic);
         float raw_mag_z = ROVER_NORMAL_Z(magnet_event.magnetic);
 
+        if (is_calibrating_compass_)
+        {
+            compass_cal_x_min_ = min(compass_cal_x_min_, raw_mag_x);
+            compass_cal_x_max_ = max(compass_cal_x_max_, raw_mag_x);
+            compass_cal_y_min_ = min(compass_cal_y_min_, raw_mag_y);
+            compass_cal_y_max_ = max(compass_cal_y_max_, raw_mag_y);
+            compass_cal_z_min_ = min(compass_cal_z_min_, raw_mag_y);
+            compass_cal_z_max_ = max(compass_cal_z_max_, raw_mag_y);
+        }
+
         // Generate calibrated values
         float mag_x = raw_mag_x + compass_x_calibration_;
         float mag_y = raw_mag_y + compass_y_calibration_;
@@ -111,18 +121,14 @@ void IMU::Loop()
 
         // TODO: Compass smoothing based on gyro
 
-        if (is_calibrating_compass_)
-        {
-            compass_cal_x_min_ = min(compass_cal_x_min_, mag_x);
-            compass_cal_x_max_ = max(compass_cal_x_max_, mag_x);
-            compass_cal_y_min_ = min(compass_cal_y_min_, mag_y);
-            compass_cal_y_max_ = max(compass_cal_y_max_, mag_y);
-            compass_cal_z_min_ = min(compass_cal_z_min_, mag_y);
-            compass_cal_z_max_ = max(compass_cal_z_max_, mag_y);
-        }
-
         if (nautic_net::config::kEnableIMULogging)
         {
+            // Serial.print(mag_x_compensated);
+            // Serial.print(',');
+            // Serial.print(mag_y_compensated);
+            // Serial.print(',');
+            // Serial.println(mag_z);
+
             Serial.print("/*");
             Serial.print(pitch_ * 180.0 / PI);
             Serial.print(",");
@@ -176,6 +182,7 @@ void IMU::FinishCompassCalibration()
         compass_y_calibration_ = -(compass_cal_y_min_ + compass_cal_y_max_) / 2.0; // beta
         compass_z_calibration_ = -(compass_cal_z_min_ + compass_cal_z_max_) / 2.0;
 
+        // TODO: Hook up I2C EEPROM
         // TODO: Save calibration in EEPROM
 
         is_calibrating_compass_ = false;
