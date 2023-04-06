@@ -1,7 +1,7 @@
 #ifndef ROVER_H
 #define ROVER_H
 
-#include "lora.pb.h"
+#include "lora_packet.pb.h"
 #include "config.h"
 #include "nautic_net/hw/gps.h"
 #include "nautic_net/hw/imu.h"

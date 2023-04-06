@@ -11,7 +11,7 @@
 #include <SPI.h>
 #include <Wire.h>
 
-#include "lora.pb.h"
+#include "lora_packet.pb.h"
 
 #define RFM95_CS 8
 #define RFM95_RST 4

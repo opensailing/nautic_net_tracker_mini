@@ -4,7 +4,7 @@
 #include <map>
 
 #include "config.h"
-#include "lora.pb.h"
+#include "lora_packet.pb.h"
 #include "nautic_net/base/rover_info.h"
 #include "nautic_net/hw/radio.h"
 #include "nautic_net/tdma.h"
