@@ -20,7 +20,7 @@ void Base::DiscoverRover(LoRaPacket packet)
         // Determine the next set of slots to hand out
         while (true)
         {
-            next_base_slot_ = (next_base_slot_ + 1) % nautic_net::tdma::kRoverSlotInterval;
+            next_base_slot_ = (next_base_slot_ + tdma::kSlotCountPerTransmit) % tdma::kRoverSlotInterval;
 
             if (tdma::TDMA::GetSlotType(next_base_slot_) == tdma::SlotType::kRoverData)
             {
@@ -32,12 +32,14 @@ void Base::DiscoverRover(LoRaPacket packet)
         rover_index = rover_count_ % tdma::kMaxRoverCount;
         rover_count_ = min(rover_count_ + 1, tdma::kMaxRoverCount);
 
+        // TODO: Deallocate a RoverInfo if it already exists at rover_index?
+
         rovers_[rover_index] = new RoverInfo(packet.hardwareID);
         rovers_[rover_index]->radio_config_ = config::kLoraRoverDataConfig;
 
         for (unsigned int i = 0; i < tdma::kRoverSlotCount; i++)
         {
-            rovers_[rover_index]->slots_[i] = next_base_slot_ + (nautic_net::tdma::kRoverSlotInterval * i);
+            rovers_[rover_index]->slots_[i] = next_base_slot_ + (tdma::kRoverSlotInterval * i);
         }
     }
     else
@@ -63,8 +65,8 @@ bool Base::TryPopConfigPacket(LoRaPacket *packet)
             RoverConfiguration config;
             config.sf = rover_info->radio_config_.sf;
             config.sbw = rover_info->radio_config_.sbw;
-            config.slots_count = nautic_net::tdma::kRoverSlotCount;
-            for (unsigned int i = 0; i < nautic_net::tdma::kRoverSlotCount; i++)
+            config.slots_count = tdma::kRoverSlotCount;
+            for (unsigned int i = 0; i < tdma::kRoverSlotCount; i++)
             {
                 config.slots[i] = rover_info->slots_[i];
             }

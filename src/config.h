@@ -17,6 +17,7 @@ namespace nautic_net::config
     static const int kReservedSlotCount = 20; // Number of slots reserved for rover discovery + configuration (kRoverDiscoverySlots + kRoverConfigurationSlots)
     static const std::set<int> kRoverDiscoverySlots = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90};
     static const std::set<int> kRoverConfigurationSlots = {1, 11, 21, 31, 41, 51, 61, 71, 81, 91};
+    static const unsigned int kSlotCountPerTransmit = 1;
 
     // Base station configuration
     static const unsigned int kMaxRoverCount = 8; // The number of supported rovers; must divide evenly into tdma::kRoverDataSlotCount
