@@ -12,12 +12,34 @@ Rover::Rover(nautic_net::hw::radio::Radio *radio, nautic_net::hw::gps::GPS *gps,
 
 void Rover::Setup()
 {
-    // Nothing right now
+    cal_switch_state_ = HIGH;
 }
 
 void Rover::Loop()
 {
-    // Nothing right now
+    // Debounce calibration switch
+    int cal_reading = digitalRead(config::kPinCalibration);
+
+    if (cal_reading != last_cal_reading_)
+    {
+        last_cal_debounce_time_ = millis();
+    }
+
+    if ((millis() - last_cal_debounce_time_) > 50 && cal_reading != cal_switch_state_)
+    {
+        cal_switch_state_ = cal_reading;
+
+        if (cal_switch_state_ == LOW)
+        {
+            imu_->BeginCompassCalibration();
+        }
+        else
+        {
+            imu_->FinishCompassCalibration();
+        }
+    }
+
+    last_cal_reading_ = cal_reading;
 }
 
 void Rover::HandleSlot(tdma::Slot slot)

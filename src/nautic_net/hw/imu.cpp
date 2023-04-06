@@ -152,6 +152,8 @@ void IMU::Loop()
 
 void IMU::BeginCompassCalibration()
 {
+    Serial.println("--- BEGIN COMPASS CALIBRATION ---");
+
     is_calibrating_compass_ = true;
     compass_x_calibration_ = 0.0;
     compass_y_calibration_ = 0.0;
@@ -170,6 +172,8 @@ void IMU::BeginCompassCalibration()
 //
 void IMU::FinishCompassCalibration()
 {
+    Serial.println("--- END COMPASS CALIBRATION ---");
+
     if (compass_cal_x_min_ == INFINITY)
     {
         is_calibrating_compass_ = false;

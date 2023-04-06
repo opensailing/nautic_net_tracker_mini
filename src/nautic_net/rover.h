@@ -32,6 +32,11 @@ namespace nautic_net::rover
         nautic_net::hw::imu::IMU *imu_;
         RoverState state_;
 
+        // Calibration switch debouncing
+        int cal_switch_state_;
+        int last_cal_reading_;
+        unsigned long last_cal_debounce_time_;
+
         bool tx_slots_[tdma::kSlotCount]; // Which slots this rover is configured to TX during
         nautic_net::hw::radio::Config radio_config_ = nautic_net::config::kLoraDefaultConfig;
 

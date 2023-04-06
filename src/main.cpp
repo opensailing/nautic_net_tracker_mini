@@ -33,6 +33,9 @@ void setup()
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 
+  // Calibration switch
+  pinMode(config::kPinCalibration, INPUT_PULLUP);
+
   // Determine initial mode - jumper A0 to ground to configure as base station
   pinMode(config::kPinBaseMode, INPUT_PULLUP);
   if (digitalRead(config::kPinBaseMode) == HIGH)
@@ -139,12 +142,10 @@ void loop()
       break;
 
     case 'c':
-      Serial.println("--- BEGIN COMPASS CALIBRATION ---");
       kIMU.BeginCompassCalibration();
       break;
 
     case 'f':
-      Serial.println("--- END COMPASS CALIBRATION ---");
       kIMU.FinishCompassCalibration();
       break;
     }
