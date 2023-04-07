@@ -128,7 +128,7 @@ void Base::PrintRoverData(LoRaPacket packet, int rssi)
     {
         Serial.print('\a');
     }
-    Serial.print("DATA: ");
+    Serial.print("BOAT,");
     Serial.print(rssi);
     Serial.print(',');
     Serial.print(packet.hardwareID, 16);
@@ -139,7 +139,11 @@ void Base::PrintRoverData(LoRaPacket packet, int rssi)
     Serial.print(',');
     Serial.print(packet.payload.roverData.heading);
     Serial.print(',');
-    Serial.println(packet.payload.roverData.heel);
+    Serial.print(packet.payload.roverData.heel);
+    Serial.print(',');
+    Serial.print(packet.payload.roverData.sog);
+    Serial.print(',');
+    Serial.println(packet.payload.roverData.cog);
 }
 
 int Base::FindRoverIndex(unsigned int hardware_id)

@@ -85,13 +85,20 @@ void Rover::SendData()
     // the heel angle such that 0° is full counter-clockwise deflection (laying flat to the left), and 180°
     // (integer value 1800) is full clockwise deflection (laying flat to the right). If the boat goes beyond these
     // angles, we have bigger problems than optimizing dwell time.
-    int encoded_heel_angle = (int)((imu_->heel_angle_deg_ + 90.0) * 10);
+    uint32_t encoded_heel_angle = (int)((imu_->heel_angle_deg_ + 90.0) * 10);
+    encoded_heel_angle = min(max(encoded_heel_angle, 0U), 1800U);
+
+    // These values are fixed-point integers with 0.1 precision
+    uint32_t encoded_cog = (uint32_t)(gps_->gps_.angle * 10);
+    uint32_t encoded_sog = (uint32_t)(gps_->gps_.speed * 10);
 
     RoverData data;
-    data.heading = (int)imu_->compass_angle_deg_;
+    data.heading = (uint32_t)imu_->compass_angle_deg_;
     data.heel = encoded_heel_angle;
     data.latitude = gps_->gps_.latitudeDegrees;
     data.longitude = gps_->gps_.longitudeDegrees;
+    data.cog = encoded_cog;
+    data.sog = encoded_sog;
 
     LoRaPacket packet;
     packet.hardwareID = util::get_hardware_id();
