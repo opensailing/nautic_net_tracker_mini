@@ -102,9 +102,9 @@ void Rover::SendData()
 
     // Occasionally include battery voltage (a value of 0 takes up no extra bytes)
     send_counter_++;
-    if ((send_counter_ % 60) == 0)
+    if ((send_counter_ % 10) == 0)
     {
-        data.battery = (unsigned int)(util::read_battery() * 100);
+        data.battery = util::ReadBatteryPercentage();
     }
     else
     {

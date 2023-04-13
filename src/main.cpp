@@ -196,7 +196,11 @@ void loop()
       case '?': // Print general info
         Serial.println("--- STATUS ---");
         Serial.print("Battery: ");
-        Serial.println(util::read_battery(), 2);
+        Serial.print(util::ReadBatteryVoltage(), 2);
+        Serial.println("V");
+        Serial.print("Battery: ");
+        Serial.print(util::ReadBatteryPercentage());
+        Serial.println("%");
         break;
       }
 

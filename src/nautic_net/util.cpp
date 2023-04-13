@@ -29,11 +29,26 @@ void nautic_net::util::print_serial_number()
     debugln(buf);
 }
 
-float nautic_net::util::read_battery()
+float nautic_net::util::ReadBatteryVoltage()
 {
     float measured_vbat = analogRead(nautic_net::config::kPinBattery);
     measured_vbat *= 2;    // we divided by 2, so multiply back
     measured_vbat *= 3.3;  // Multiply by 3.3V, our reference voltage
     measured_vbat /= 1024; // convert to voltage
     return measured_vbat;
+}
+
+unsigned int nautic_net::util::ReadBatteryPercentage()
+{
+    float voltage = ReadBatteryVoltage();
+
+    for (int i = 0; i < kBatteryCapacityCount; i++)
+    {
+        if (kBatteryCapacity[i] > voltage) // Round up
+        {
+            return i * 5; // 5 percentage points per step
+        }
+    }
+
+    return 100;
 }
