@@ -143,7 +143,9 @@ void Base::PrintRoverData(LoRaPacket packet, int rssi)
     Serial.print(',');
     Serial.print(packet.payload.roverData.sog);
     Serial.print(',');
-    Serial.println(packet.payload.roverData.cog);
+    Serial.print(packet.payload.roverData.cog);
+    Serial.print(',');
+    Serial.println(packet.payload.roverData.battery);
 }
 
 int Base::FindRoverIndex(unsigned int hardware_id)

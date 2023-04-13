@@ -17,6 +17,7 @@ typedef struct _RoverData {
     uint32_t heel; /* degrees, fixed-point decimal with 0.1 precision, 0 to 1800 */
     uint32_t cog; /* degrees, fixed-point decimal with 0.1 precision, 0 to 3600 */
     uint32_t sog; /* knots, fixed-point decimal with 0.1 precision */
+    uint32_t battery; /* volts, fixed-point decimal with 0.01 precision */
 } RoverData;
 
 typedef struct _RoverDiscovery {
@@ -47,11 +48,11 @@ extern "C" {
 
 /* Initializer values for message structs */
 #define LoRaPacket_init_default                  {0, 0, {RoverData_init_default}}
-#define RoverData_init_default                   {0, 0, 0, 0, 0, 0}
+#define RoverData_init_default                   {0, 0, 0, 0, 0, 0, 0}
 #define RoverDiscovery_init_default              {0}
 #define RoverConfiguration_init_default          {0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 0}
 #define LoRaPacket_init_zero                     {0, 0, {RoverData_init_zero}}
-#define RoverData_init_zero                      {0, 0, 0, 0, 0, 0}
+#define RoverData_init_zero                      {0, 0, 0, 0, 0, 0, 0}
 #define RoverDiscovery_init_zero                 {0}
 #define RoverConfiguration_init_zero             {0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 0}
 
@@ -62,6 +63,7 @@ extern "C" {
 #define RoverData_heel_tag                       4
 #define RoverData_cog_tag                        5
 #define RoverData_sog_tag                        6
+#define RoverData_battery_tag                    7
 #define RoverConfiguration_slots_tag             1
 #define RoverConfiguration_sbw_tag               2
 #define RoverConfiguration_sf_tag                3
@@ -88,7 +90,8 @@ X(a, STATIC,   SINGULAR, FLOAT,    longitude,         2) \
 X(a, STATIC,   SINGULAR, UINT32,   heading,           3) \
 X(a, STATIC,   SINGULAR, UINT32,   heel,              4) \
 X(a, STATIC,   SINGULAR, UINT32,   cog,               5) \
-X(a, STATIC,   SINGULAR, UINT32,   sog,               6)
+X(a, STATIC,   SINGULAR, UINT32,   sog,               6) \
+X(a, STATIC,   SINGULAR, UINT32,   battery,           7)
 #define RoverData_CALLBACK NULL
 #define RoverData_DEFAULT NULL
 
@@ -118,7 +121,7 @@ extern const pb_msgdesc_t RoverConfiguration_msg;
 /* Maximum encoded size of messages (where known) */
 #define LoRaPacket_size                          1120
 #define RoverConfiguration_size                  1112
-#define RoverData_size                           34
+#define RoverData_size                           40
 #define RoverDiscovery_size                      0
 
 #ifdef __cplusplus

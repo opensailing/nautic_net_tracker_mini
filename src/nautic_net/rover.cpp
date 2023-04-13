@@ -100,6 +100,17 @@ void Rover::SendData()
     data.cog = encoded_cog;
     data.sog = encoded_sog;
 
+    // Occasionally include battery voltage (a value of 0 takes up no extra bytes)
+    send_counter_++;
+    if ((send_counter_ % 60) == 0)
+    {
+        data.battery = (unsigned int)(util::read_battery() * 100);
+    }
+    else
+    {
+        data.battery = 0;
+    }
+
     LoRaPacket packet;
     packet.hardwareID = util::get_hardware_id();
     packet.payload.roverData = data;
