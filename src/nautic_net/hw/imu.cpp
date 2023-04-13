@@ -102,8 +102,8 @@ void IMU::Loop()
             compass_cal_x_max_ = max(compass_cal_x_max_, raw_mag_x);
             compass_cal_y_min_ = min(compass_cal_y_min_, raw_mag_y);
             compass_cal_y_max_ = max(compass_cal_y_max_, raw_mag_y);
-            compass_cal_z_min_ = min(compass_cal_z_min_, raw_mag_y);
-            compass_cal_z_max_ = max(compass_cal_z_max_, raw_mag_y);
+            compass_cal_z_min_ = min(compass_cal_z_min_, raw_mag_z);
+            compass_cal_z_max_ = max(compass_cal_z_max_, raw_mag_z);
         }
 
         // Generate calibrated values
