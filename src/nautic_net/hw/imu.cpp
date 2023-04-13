@@ -3,7 +3,7 @@
 
 using namespace nautic_net::hw::imu;
 
-IMU::IMU()
+IMU::IMU(nautic_net::hw::eeprom::EEPROM *eeprom) : eeprom_(eeprom)
 {
 }
 
@@ -15,6 +15,11 @@ void IMU::Setup()
     {
         return;
     }
+
+    nautic_net::hw::eeprom::CompassCalibration cal = eeprom_->ReadCompassCalibration();
+    compass_x_calibration_ = cal.x;
+    compass_y_calibration_ = cal.y;
+    compass_z_calibration_ = cal.z;
 
     //
     // Configure accelerometer
@@ -186,8 +191,14 @@ void IMU::FinishCompassCalibration()
         compass_y_calibration_ = -(compass_cal_y_min_ + compass_cal_y_max_) / 2.0; // beta
         compass_z_calibration_ = -(compass_cal_z_min_ + compass_cal_z_max_) / 2.0;
 
-        // TODO: Hook up I2C EEPROM
-        // TODO: Save calibration in EEPROM
+        nautic_net::hw::eeprom::CompassCalibration cal = {
+            .version = 1,
+            .x = compass_x_calibration_,
+            .y = compass_y_calibration_,
+            .z = compass_z_calibration_,
+
+        };
+        eeprom_->WriteCompassCalibration(cal);
 
         is_calibrating_compass_ = false;
         is_compass_calibrated_ = true;

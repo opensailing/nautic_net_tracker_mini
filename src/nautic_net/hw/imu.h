@@ -4,6 +4,8 @@
 #include <Adafruit_LSM6DSOX.h>
 #include <Adafruit_LIS3MDL.h>
 
+#include "eeprom.h"
+
 // Measured:   X is towards the sky, Y is towards starbord, Z is towards the bow
 // Normalized: X is towards the bow, Y is towards port, Z is towards the sky
 #define ROVER_NORMAL_X(value) value.z
@@ -15,7 +17,7 @@ namespace nautic_net::hw::imu
     class IMU
     {
     public:
-        IMU();
+        IMU(nautic_net::hw::eeprom::EEPROM *eeprom);
         void Setup();
         void Loop();
         void BeginCompassCalibration();
@@ -29,6 +31,7 @@ namespace nautic_net::hw::imu
 
         Adafruit_LSM6DSOX accel_; // Accelerometer/gyro
         Adafruit_LIS3MDL magnet_; // Magnetometer
+        nautic_net::hw::eeprom::EEPROM *eeprom_;
 
         bool is_calibrating_compass_;
         bool is_compass_calibrated_ = false;

@@ -20,7 +20,7 @@ Mode kMode = Mode::kRover;
 
 hw::eeprom::EEPROM kEEPROM;
 hw::radio::Radio kRadio;
-hw::imu::IMU kIMU;
+hw::imu::IMU kIMU(&kEEPROM);
 hw::gps::GPS kGPS(&Serial1, config::kPinGPSPPS);
 rover::Rover kRover(&kRadio, &kGPS, &kIMU);
 base::Base kBase(&kRadio);
@@ -127,6 +127,7 @@ void loop()
     char byte = Serial.read();
     serial_buffer_[serial_buffer_index_] = byte;
 
+    // Use line feed (LF) as the line separator (NO CR OR CRLF, PLEASE AND THANK YOU)
     if (byte == '\n')
     {
       // Replace \n with null terminator
@@ -134,42 +135,68 @@ void loop()
 
       switch (serial_buffer_[0])
       {
-      case 'b':
+      case 'b': // Convert to base station mode
         debugln("--- BASE STATION ---");
         kMode = Mode::kBase;
         break;
 
-      case 'r':
+      case 'c': // Begin compass cal
+        kIMU.BeginCompassCalibration();
+        break;
+
+      case 'e': // Read EEPROM
+      {
+        Serial.print("Serial number: ");
+        Serial.println(kEEPROM.ReadSerialNumber());
+
+        nautic_net::hw::eeprom::CompassCalibration cal = kEEPROM.ReadCompassCalibration();
+        Serial.print("Compass cal X: ");
+        Serial.println(cal.x);
+        Serial.print("Compass cal Y: ");
+        Serial.println(cal.y);
+        Serial.print("Compass cal Z: ");
+        Serial.println(cal.z);
+      }
+      break;
+
+      case 'f': // Finish compass cal
+        kIMU.FinishCompassCalibration();
+        break;
+
+      case 'r': // Convert to rover mode (and reset any existing rover config)
         debugln("--- ROVER ---");
         kMode = Mode::kRover;
         kRover.ResetConfiguration();
         break;
 
-      case 's':
+      case 's': // Read or write serial number
+      {
+        if (serial_buffer_index_ == 1)
+        {
+          Serial.print("Serial number: ");
+          Serial.println(kEEPROM.ReadSerialNumber());
+        }
+        else
+        {
+          // Convert "s12345" to an integer
+          uint32_t new_serial_number_ = (uint32_t)atoi(serial_buffer_ + 1);
+
+          kEEPROM.WriteSerialNumber(new_serial_number_);
+          Serial.print("New serial number: ");
+          Serial.println(new_serial_number_);
+        }
+        break;
+      }
+
+      case 'z': // Reset EEPROM to default values
+        kEEPROM.Reset();
+        Serial.println("Reset EEPROM to default values");
+        break;
+
+      case '?': // Print general info
         Serial.println("--- STATUS ---");
         Serial.print("Battery: ");
         Serial.println(util::read_battery(), 2);
-        break;
-
-      case 'c':
-        kIMU.BeginCompassCalibration();
-        break;
-
-      case 'f':
-        kIMU.FinishCompassCalibration();
-        break;
-
-      case 'w':
-        // Convert "w12345" to an integer and persist to EEPROM
-        {
-          uint32_t new_serial_number_ = (uint32_t)atoi(serial_buffer_ + 1);
-          kEEPROM.WriteSerialNumber(new_serial_number_);
-          Serial.println(new_serial_number_);
-          break;
-        }
-
-      case 'x':
-        Serial.println(kEEPROM.ReadSerialNumber());
         break;
       }
 
