@@ -6,6 +6,7 @@
 #include "lora_packet.pb.h"
 #include "main.h"
 #include "nautic_net/base.h"
+#include "nautic_net/hw/eeprom.h"
 #include "nautic_net/hw/gps.h"
 #include "nautic_net/hw/imu.h"
 #include "nautic_net/hw/radio.h"
@@ -17,12 +18,17 @@ using namespace nautic_net;
 
 Mode kMode = Mode::kRover;
 
+hw::eeprom::EEPROM kEEPROM;
 hw::radio::Radio kRadio;
 hw::imu::IMU kIMU;
 hw::gps::GPS kGPS(&Serial1, config::kPinGPSPPS);
 rover::Rover kRover(&kRadio, &kGPS, &kIMU);
 base::Base kBase(&kRadio);
 tdma::TDMA kTDMA;
+
+static const int kSerialBufferSize = 128;
+char serial_buffer_[kSerialBufferSize];
+uint16_t serial_buffer_index_;
 
 void setup()
 {
@@ -51,17 +57,14 @@ void setup()
   debugBegin(115200);
   // debugWait();
 
-  // IMU
+  // Configure hardware
+  kEEPROM.Setup();
   kIMU.Setup();
-
-  // Radio
   kRadio.Setup();
-
-  // Rover
   kRover.Setup();
-
-  // GPS
   kGPS.Setup();
+
+  // Don't continue until GPS has a fix, because we need accurate timing
   kGPS.WaitForFix();
 }
 
@@ -122,32 +125,59 @@ void loop()
   if (Serial.available())
   {
     char byte = Serial.read();
-    switch (byte)
+    serial_buffer_[serial_buffer_index_] = byte;
+
+    if (byte == '\n')
     {
-    case 'b':
-      debugln("--- BASE STATION ---");
-      kMode = Mode::kBase;
-      break;
+      // Replace \n with null terminator
+      serial_buffer_[serial_buffer_index_] = 0;
 
-    case 'r':
-      debugln("--- ROVER ---");
-      kMode = Mode::kRover;
-      kRover.ResetConfiguration();
-      break;
+      switch (serial_buffer_[0])
+      {
+      case 'b':
+        debugln("--- BASE STATION ---");
+        kMode = Mode::kBase;
+        break;
 
-    case 's':
-      Serial.println("--- STATUS ---");
-      Serial.print("Battery: ");
-      Serial.println(util::read_battery(), 2);
-      break;
+      case 'r':
+        debugln("--- ROVER ---");
+        kMode = Mode::kRover;
+        kRover.ResetConfiguration();
+        break;
 
-    case 'c':
-      kIMU.BeginCompassCalibration();
-      break;
+      case 's':
+        Serial.println("--- STATUS ---");
+        Serial.print("Battery: ");
+        Serial.println(util::read_battery(), 2);
+        break;
 
-    case 'f':
-      kIMU.FinishCompassCalibration();
-      break;
+      case 'c':
+        kIMU.BeginCompassCalibration();
+        break;
+
+      case 'f':
+        kIMU.FinishCompassCalibration();
+        break;
+
+      case 'w':
+        // Convert "w12345" to an integer and persist to EEPROM
+        {
+          uint32_t new_serial_number_ = (uint32_t)atoi(serial_buffer_ + 1);
+          kEEPROM.WriteSerialNumber(new_serial_number_);
+          Serial.println(new_serial_number_);
+          break;
+        }
+
+      case 'x':
+        Serial.println(kEEPROM.ReadSerialNumber());
+        break;
+      }
+
+      serial_buffer_index_ = 0;
+    }
+    else
+    {
+      serial_buffer_index_ = (serial_buffer_index_ + 1) % kSerialBufferSize;
     }
   }
 
