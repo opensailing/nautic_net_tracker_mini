@@ -106,9 +106,9 @@ void Base::HandleSlot(tdma::Slot slot)
 void Base::HandlePacket(LoRaPacket packet, int rssi)
 {
     int rover_index = FindRoverIndex(packet.hardwareID);
-    if (rover_index != -1 && !rovers_[rover_index]->is_configured_)
+    if (rover_index != -1 && !rovers_[rover_index]->is_configured_ && packet.which_payload == LoRaPacket_roverData_tag)
     {
-        debugln("Rover was successfully configured");
+        debugln("Got data; rover was successfully configured");
         rovers_[rover_index]->is_configured_ = true;
     }
 

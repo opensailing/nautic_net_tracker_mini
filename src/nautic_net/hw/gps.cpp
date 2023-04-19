@@ -1,3 +1,4 @@
+#include "debug.h"
 #include "gps.h"
 
 using namespace nautic_net::hw::gps;
@@ -18,6 +19,7 @@ void GPS::Setup()
 
 void GPS::WaitForFix()
 {
+    debugln("Waiting for GPS fix...");
     digitalWrite(LED_BUILTIN, HIGH);
 
     while (!gps_.fix)
@@ -25,6 +27,7 @@ void GPS::WaitForFix()
         Read();
     }
 
+    debugln("Got GPS fix");
     digitalWrite(LED_BUILTIN, LOW);
 }
 

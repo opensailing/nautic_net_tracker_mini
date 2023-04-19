@@ -29,6 +29,7 @@ tdma::TDMA kTDMA;
 static const int kSerialBufferSize = 128;
 char serial_buffer_[kSerialBufferSize];
 uint16_t serial_buffer_index_;
+// bool is_serial_connected_;
 
 void setup()
 {
@@ -53,8 +54,8 @@ void setup()
     kMode = Mode::kBase;
   }
 
-  // Serial debug
-  debugBegin(115200);
+  // Serial and debug
+  Serial.begin(115200);
   // debugWait();
 
   // Configure hardware
@@ -122,6 +123,19 @@ void loop()
   //
   // Serial commands
   //
+  // if (Serial && !is_serial_connected_)
+  // {
+  //   delay(50);
+  //   PrintNarwin();
+  //   PrintEEPROM();
+  //   PrintStatus();
+  //   is_serial_connected_ = true;
+  // }
+  // else if (!Serial && is_serial_connected_)
+  // {
+  //   is_serial_connected_ = false;
+  // }
+
   if (Serial.available())
   {
     char byte = Serial.read();
@@ -145,19 +159,8 @@ void loop()
         break;
 
       case 'e': // Read EEPROM
-      {
-        Serial.print("Serial number: ");
-        Serial.println(kEEPROM.ReadSerialNumber());
-
-        nautic_net::hw::eeprom::CompassCalibration cal = kEEPROM.ReadCompassCalibration();
-        Serial.print("Compass cal X: ");
-        Serial.println(cal.x);
-        Serial.print("Compass cal Y: ");
-        Serial.println(cal.y);
-        Serial.print("Compass cal Z: ");
-        Serial.println(cal.z);
-      }
-      break;
+        PrintEEPROM();
+        break;
 
       case 'f': // Finish compass cal
         kIMU.FinishCompassCalibration();
@@ -194,13 +197,7 @@ void loop()
         break;
 
       case '?': // Print general info
-        Serial.println("--- STATUS ---");
-        Serial.print("Battery: ");
-        Serial.print(util::ReadBatteryVoltage(), 2);
-        Serial.println("V");
-        Serial.print("Battery: ");
-        Serial.print(util::ReadBatteryPercentage());
-        Serial.println("%");
+        PrintStatus();
         break;
       }
 
@@ -225,4 +222,58 @@ void loop()
     // nothing yet
     break;
   }
+}
+
+void PrintEEPROM()
+{
+  Serial.print("Serial number: ");
+  Serial.println(kEEPROM.ReadSerialNumber());
+
+  nautic_net::hw::eeprom::CompassCalibration cal = kEEPROM.ReadCompassCalibration();
+  Serial.print("Compass cal X: ");
+  Serial.println(cal.x);
+  Serial.print("Compass cal Y: ");
+  Serial.println(cal.y);
+  Serial.print("Compass cal Z: ");
+  Serial.println(cal.z);
+}
+
+void PrintStatus()
+{
+  Serial.println("--- STATUS ---");
+  Serial.print("Battery: ");
+  Serial.print(util::ReadBatteryVoltage(), 2);
+  Serial.println("V");
+  Serial.print("Battery: ");
+  Serial.print(util::ReadBatteryPercentage());
+  Serial.println("%");
+}
+
+void PrintNarwin()
+{
+  Serial.println("                                       7D");
+  Serial.println("                                    .7DD");
+  Serial.println("                                  DDD7");
+  Serial.println("                              . DDDD");
+  Serial.println("                      DDDDD:. DDDD?");
+  Serial.println("                  DDDDDDDDDDDDDDD.");
+  Serial.println("                 DDDDDDDDDDDDDDDD");
+  Serial.println("                DDDDDDD.?DDDDDDDDD");
+  Serial.println("               7DDDDDD   DDDDDDDDD");
+  Serial.println("               DDDDDDDDDDDDDDDDDDD");
+  Serial.println("               DDDDDDDDDDDDDDDDDDD");
+  Serial.println("               DDDDDDDDDDDDDDDDDDD");
+  Serial.println("               DDDDDDDDDDDDDDDDDDD");
+  Serial.println("               DDDDDDDDDDDDDDDDDDD");
+  Serial.println("               DDDDDD    DDDDDDDDD");
+  Serial.println("D   .DD       DDDDD     DDDDDDDDDD");
+  Serial.println("DDDDDD?       DDDD      DDDDDDDDDD");
+  Serial.println("DDDDD        .DDDD     DDDDDDDDDDD");
+  Serial.println("  DDDD      DDDDD     DDDDDDDDDND");
+  Serial.println("   DDDDDDDDDDDD     DDDDDDDDDDDD  ~~~~~~~");
+  Serial.println("    DDDDDDDDDDD  .DDDDDDDdDDDD      ~~~~~~~~~~~~~");
+  Serial.println("~~~~~ DDDDDDDDDDDDDDDDDDDDDD  ~~~~          ~~~~~~~~~~~");
+  Serial.println("       dDDDDDDDDDDDDDDDD  ~~~~~~~~~~~~~~~~~~~~~~~~~~");
+  Serial.println("           ~~~~~~~~~~~~~~~~~~~");
+  Serial.println("~~~~~~~~~~~~~~~~          ~~~~~~~~~~~~");
 }

@@ -1,4 +1,5 @@
 #include "eeprom.h"
+#include "debug.h"
 
 using namespace nautic_net::hw::eeprom;
 
@@ -8,8 +9,11 @@ EEPROM::EEPROM()
 
 void EEPROM::Setup()
 {
+    debugln("Beginning EEPROM setup");
+
     if (eeprom_.begin(kI2CAddress))
     {
+        debugln("Connected to EEPROM");
         // EEPROM is initialized with 0xFF in every address, so let's put in some default values
         // if it hasn't been initialized yet
         if (eeprom_.read(kFirstByte) == 0xFF)
@@ -19,6 +23,11 @@ void EEPROM::Setup()
         initialized_ = true;
         ReadSerialNumber();
     }
+    else
+    {
+        debugln("Failed to connect to EEPROM");
+    }
+    debugln("EEPROM setup complete");
 }
 
 uint32_t EEPROM::ReadSerialNumber()

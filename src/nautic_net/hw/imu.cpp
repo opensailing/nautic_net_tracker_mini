@@ -1,5 +1,6 @@
-#include "imu.h"
 #include "config.h"
+#include "debug.h"
+#include "imu.h"
 
 using namespace nautic_net::hw::imu;
 
@@ -9,10 +10,12 @@ IMU::IMU(nautic_net::hw::eeprom::EEPROM *eeprom) : eeprom_(eeprom)
 
 void IMU::Setup()
 {
+    debug("Beginning IMU setup");
     // In the base station, the IMU board may be omitted
     successful_init_ = accel_.begin_I2C() && magnet_.begin_I2C();
     if (!successful_init_)
     {
+        debugln("Failed to initialize IMU");
         return;
     }
 
@@ -25,6 +28,7 @@ void IMU::Setup()
     // Configure accelerometer
     // https://learn.adafruit.com/lsm6dsox-and-ism330dhc-6-dof-imu/arduino
     //
+    debugln("Configuring accelerometer and gyro");
     accel_.setAccelRange(LSM6DS_ACCEL_RANGE_2_G);
     accel_.setAccelDataRate(LSM6DS_RATE_12_5_HZ);
     accel_.setGyroRange(LSM6DS_GYRO_RANGE_500_DPS);
@@ -36,6 +40,7 @@ void IMU::Setup()
     // Configure magnetometer
     // https://learn.adafruit.com/lis3mdl-triple-axis-magnetometer/arduino
     //
+    debugln("Configuring magnetometer");
     magnet_.setPerformanceMode(LIS3MDL_MEDIUMMODE);
     magnet_.setDataRate(LIS3MDL_DATARATE_10_HZ);
     magnet_.setRange(LIS3MDL_RANGE_4_GAUSS);
@@ -44,6 +49,8 @@ void IMU::Setup()
                             true,               // polarity
                             false,              // don't latch
                             true);              // enabled!
+
+    debugln("IMU setup complete");
 }
 
 void IMU::Loop()

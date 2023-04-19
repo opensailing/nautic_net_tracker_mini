@@ -7,4 +7,8 @@ enum class Mode
     kBase
 };
 
+void PrintEEPROM();
+void PrintNarwin();
+void PrintStatus();
+
 #endif

@@ -11,7 +11,7 @@ Radio::Radio()
 
 void Radio::Setup()
 {
-
+    debugln("Beginning radio setup");
     pinMode(RFM95_RST, OUTPUT);
 
     // Manually reset radio
@@ -43,6 +43,8 @@ void Radio::Setup()
     kRF95.setTxPower(config::kLoraPower, false);
 
     Configure(config::kLoraDefaultConfig);
+
+    debugln("Radio setup complete");
 }
 
 void Radio::Configure(Config config)

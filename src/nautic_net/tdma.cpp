@@ -1,4 +1,6 @@
 #include <Arduino.h>
+
+#include "debug.h"
 #include "nautic_net/tdma.h"
 
 using namespace nautic_net::tdma;
@@ -11,6 +13,7 @@ void TDMA::SyncToGPS(int second)
 {
     if (second != -1 && second % kCycleDurationSec == 0)
     {
+        debugln("Synced TDMA cycle to GPS");
         synced_at_ = micros();
     }
 }
