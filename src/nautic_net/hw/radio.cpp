@@ -100,6 +100,21 @@ bool Radio::TryReceive(LoRaPacket *rx_packet, int *rssi)
             pb_decode(&stream, LoRaPacket_fields, rx_packet);
             *rssi = kRF95.lastRssi();
 
+            // Print packet as hexadecimal, for consumption by nautic_net_device
+            Serial.print("LORA,");
+            Serial.print(*rssi);
+            Serial.print(',');
+            for (int i = 0; i < length; i++)
+            {
+                // Print leading "0" if necessary
+                if (buffer[i] < 16)
+                {
+                    Serial.print("0");
+                }
+                Serial.print(buffer[i], 16);
+            }
+            Serial.println();
+
             debug("RX <-   ");
             debug(length);
             debug(" (");
