@@ -10,12 +10,12 @@ Base::Base(nautic_net::hw::radio::Radio *radio) : radio_(radio)
 
 void Base::DiscoverRover(LoRaPacket packet)
 {
-    int rover_index = FindRoverIndex(packet.hardwareID);
+    int rover_index = FindRoverIndex(packet.hardware_id);
 
     if (rover_index == -1)
     {
         debug("Found a new rover: ");
-        debugln(packet.hardwareID);
+        debugln2(packet.hardware_id, 16);
 
         // Determine the next set of slots to hand out
         while (true)
@@ -34,7 +34,7 @@ void Base::DiscoverRover(LoRaPacket packet)
 
         // TODO: Deallocate a RoverInfo if it already exists at rover_index?
 
-        rovers_[rover_index] = new RoverInfo(packet.hardwareID);
+        rovers_[rover_index] = new RoverInfo(packet.hardware_id, packet.serial_number);
         rovers_[rover_index]->radio_config_ = config::kLoraRoverDataConfig;
 
         for (unsigned int i = 0; i < tdma::kRoverSlotCount; i++)
@@ -45,7 +45,7 @@ void Base::DiscoverRover(LoRaPacket packet)
     else
     {
         debug("Rediscovered existing rover: ");
-        debugln(packet.hardwareID);
+        debugln2(packet.hardware_id, 16);
     }
 
     // Enqueue for TX later
@@ -60,7 +60,7 @@ bool Base::TryPopConfigPacket(LoRaPacket *packet)
         if (!rover_info->is_configured_)
         {
             debug("Sending config to rover ");
-            debugln(rover_info->hardware_id_);
+            debugln2(rover_info->hardware_id_, 16);
 
             RoverConfiguration config;
             config.sf = rover_info->radio_config_.sf;
@@ -71,9 +71,9 @@ bool Base::TryPopConfigPacket(LoRaPacket *packet)
                 config.slots[i] = rover_info->slots_[i];
             }
 
-            packet->hardwareID = rover_info->hardware_id_;
-            packet->payload.roverConfiguration = config;
-            packet->which_payload = LoRaPacket_roverConfiguration_tag;
+            packet->hardware_id = rover_info->hardware_id_;
+            packet->payload.rover_configuration = config;
+            packet->which_payload = LoRaPacket_rover_configuration_tag;
 
             return true;
         }
@@ -105,18 +105,18 @@ void Base::HandleSlot(tdma::Slot slot)
 
 void Base::HandlePacket(LoRaPacket packet, int rssi)
 {
-    int rover_index = FindRoverIndex(packet.hardwareID);
-    if (rover_index != -1 && !rovers_[rover_index]->is_configured_ && packet.which_payload == LoRaPacket_roverData_tag)
+    int rover_index = FindRoverIndex(packet.hardware_id);
+    if (rover_index != -1 && !rovers_[rover_index]->is_configured_ && packet.which_payload == LoRaPacket_rover_data_tag)
     {
         debugln("Got data; rover was successfully configured");
         rovers_[rover_index]->is_configured_ = true;
     }
 
-    if (packet.which_payload == LoRaPacket_roverDiscovery_tag)
+    if (packet.which_payload == LoRaPacket_rover_discovery_tag)
     {
         DiscoverRover(packet);
     }
-    else if (packet.which_payload == LoRaPacket_roverData_tag)
+    else if (packet.which_payload == LoRaPacket_rover_data_tag)
     {
         PrintRoverData(packet, rssi);
     }
@@ -131,21 +131,23 @@ void Base::PrintRoverData(LoRaPacket packet, int rssi)
     Serial.print("BOAT,");
     Serial.print(rssi);
     Serial.print(',');
-    Serial.print(packet.hardwareID, 16);
+    Serial.print(packet.hardware_id, 16);
     Serial.print(',');
-    Serial.print(packet.payload.roverData.latitude, 8);
+    Serial.print(packet.payload.rover_data.latitude, 8);
     Serial.print(',');
-    Serial.print(packet.payload.roverData.longitude, 8);
+    Serial.print(packet.payload.rover_data.longitude, 8);
     Serial.print(',');
-    Serial.print(packet.payload.roverData.heading);
+    Serial.print(packet.payload.rover_data.heading);
     Serial.print(',');
-    Serial.print(packet.payload.roverData.heel);
+    Serial.print(packet.payload.rover_data.heel);
     Serial.print(',');
-    Serial.print(packet.payload.roverData.sog);
+    Serial.print(packet.payload.rover_data.sog);
     Serial.print(',');
-    Serial.print(packet.payload.roverData.cog);
+    Serial.print(packet.payload.rover_data.cog);
     Serial.print(',');
-    Serial.println(packet.payload.roverData.battery);
+    Serial.print(packet.payload.rover_data.battery);
+    Serial.print(',');
+    Serial.println(packet.serial_number);
 }
 
 int Base::FindRoverIndex(unsigned int hardware_id)

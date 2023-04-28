@@ -1,6 +1,6 @@
 #include "rover_info.h"
 
-nautic_net::base::RoverInfo::RoverInfo(int hardware_id) : hardware_id_(hardware_id)
+nautic_net::base::RoverInfo::RoverInfo(unsigned int hardware_id, unsigned int serial_number) : hardware_id_(hardware_id), serial_number_(serial_number)
 {
 }
 

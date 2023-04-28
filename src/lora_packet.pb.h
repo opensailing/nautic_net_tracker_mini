@@ -17,7 +17,7 @@ typedef struct _RoverData {
     uint32_t heel; /* degrees, fixed-point decimal with 0.1 precision, 0 to 1800 */
     uint32_t cog; /* degrees, fixed-point decimal with 0.1 precision, 0 to 3600 */
     uint32_t sog; /* knots, fixed-point decimal with 0.1 precision */
-    uint32_t battery; /* volts, fixed-point decimal with 0.01 precision */
+    uint32_t battery; /* percent, 0 implies null */
 } RoverData;
 
 typedef struct _RoverDiscovery {
@@ -32,13 +32,14 @@ typedef struct _RoverConfiguration {
 } RoverConfiguration;
 
 typedef struct _LoRaPacket {
-    uint32_t hardwareID;
+    uint32_t hardware_id;
     pb_size_t which_payload;
     union {
-        RoverData roverData;
-        RoverDiscovery roverDiscovery;
-        RoverConfiguration roverConfiguration;
+        RoverData rover_data;
+        RoverDiscovery rover_discovery;
+        RoverConfiguration rover_configuration;
     } payload;
+    uint32_t serial_number;
 } LoRaPacket;
 
 
@@ -47,11 +48,11 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define LoRaPacket_init_default                  {0, 0, {RoverData_init_default}}
+#define LoRaPacket_init_default                  {0, 0, {RoverData_init_default}, 0}
 #define RoverData_init_default                   {0, 0, 0, 0, 0, 0, 0}
 #define RoverDiscovery_init_default              {0}
 #define RoverConfiguration_init_default          {0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 0}
-#define LoRaPacket_init_zero                     {0, 0, {RoverData_init_zero}}
+#define LoRaPacket_init_zero                     {0, 0, {RoverData_init_zero}, 0}
 #define RoverData_init_zero                      {0, 0, 0, 0, 0, 0, 0}
 #define RoverDiscovery_init_zero                 {0}
 #define RoverConfiguration_init_zero             {0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 0}
@@ -67,22 +68,24 @@ extern "C" {
 #define RoverConfiguration_slots_tag             1
 #define RoverConfiguration_sbw_tag               2
 #define RoverConfiguration_sf_tag                3
-#define LoRaPacket_hardwareID_tag                1
-#define LoRaPacket_roverData_tag                 2
-#define LoRaPacket_roverDiscovery_tag            3
-#define LoRaPacket_roverConfiguration_tag        4
+#define LoRaPacket_hardware_id_tag               1
+#define LoRaPacket_rover_data_tag                2
+#define LoRaPacket_rover_discovery_tag           3
+#define LoRaPacket_rover_configuration_tag       4
+#define LoRaPacket_serial_number_tag             5
 
 /* Struct field encoding specification for nanopb */
 #define LoRaPacket_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, FIXED32,  hardwareID,        1) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (payload,roverData,payload.roverData),   2) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (payload,roverDiscovery,payload.roverDiscovery),   3) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (payload,roverConfiguration,payload.roverConfiguration),   4)
+X(a, STATIC,   SINGULAR, FIXED32,  hardware_id,       1) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,rover_data,payload.rover_data),   2) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,rover_discovery,payload.rover_discovery),   3) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,rover_configuration,payload.rover_configuration),   4) \
+X(a, STATIC,   SINGULAR, UINT32,   serial_number,     5)
 #define LoRaPacket_CALLBACK NULL
 #define LoRaPacket_DEFAULT NULL
-#define LoRaPacket_payload_roverData_MSGTYPE RoverData
-#define LoRaPacket_payload_roverDiscovery_MSGTYPE RoverDiscovery
-#define LoRaPacket_payload_roverConfiguration_MSGTYPE RoverConfiguration
+#define LoRaPacket_payload_rover_data_MSGTYPE RoverData
+#define LoRaPacket_payload_rover_discovery_MSGTYPE RoverDiscovery
+#define LoRaPacket_payload_rover_configuration_MSGTYPE RoverConfiguration
 
 #define RoverData_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, FLOAT,    latitude,          1) \
@@ -119,7 +122,7 @@ extern const pb_msgdesc_t RoverConfiguration_msg;
 #define RoverConfiguration_fields &RoverConfiguration_msg
 
 /* Maximum encoded size of messages (where known) */
-#define LoRaPacket_size                          1120
+#define LoRaPacket_size                          1126
 #define RoverConfiguration_size                  1112
 #define RoverData_size                           40
 #define RoverDiscovery_size                      0

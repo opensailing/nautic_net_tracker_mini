@@ -132,13 +132,13 @@ void Radio::DebugPacketType(LoRaPacket packet)
 {
     switch (packet.which_payload)
     {
-    case LoRaPacket_roverDiscovery_tag:
+    case LoRaPacket_rover_discovery_tag:
         debugln("RoverDiscovery");
         break;
-    case LoRaPacket_roverData_tag:
+    case LoRaPacket_rover_data_tag:
         debugln("RoverData");
         break;
-    case LoRaPacket_roverConfiguration_tag:
+    case LoRaPacket_rover_configuration_tag:
         debugln("RoverConfiguration");
         break;
     default:

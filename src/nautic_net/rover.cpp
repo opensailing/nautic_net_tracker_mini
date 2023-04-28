@@ -73,9 +73,10 @@ void Rover::SendDiscovery()
     discovery.dummy_field = 0;
 
     LoRaPacket packet;
-    packet.hardwareID = util::get_hardware_id();
-    packet.payload.roverDiscovery = discovery;
-    packet.which_payload = LoRaPacket_roverDiscovery_tag;
+    packet.hardware_id = util::get_hardware_id();
+    packet.serial_number = eeprom_->serial_number_;
+    packet.payload.rover_discovery = discovery;
+    packet.which_payload = LoRaPacket_rover_discovery_tag;
 
     radio_->Send(packet);
 }
@@ -113,9 +114,10 @@ void Rover::SendData()
     }
 
     LoRaPacket packet;
-    packet.hardwareID = eeprom_->serial_number_;
-    packet.payload.roverData = data;
-    packet.which_payload = LoRaPacket_roverData_tag;
+    packet.hardware_id = util::get_hardware_id();
+    packet.serial_number = eeprom_->serial_number_;
+    packet.payload.rover_data = data;
+    packet.which_payload = LoRaPacket_rover_data_tag;
 
     radio_->Send(packet);
 }
@@ -123,7 +125,7 @@ void Rover::SendData()
 void Rover::HandlePacket(LoRaPacket packet, int rssi)
 {
     // Ignore configs destined for other rovers
-    if (packet.which_payload == LoRaPacket_roverConfiguration_tag && packet.hardwareID == util::get_hardware_id())
+    if (packet.which_payload == LoRaPacket_rover_configuration_tag && packet.hardware_id == util::get_hardware_id())
     {
         Configure(packet);
     }
@@ -131,7 +133,7 @@ void Rover::HandlePacket(LoRaPacket packet, int rssi)
 
 void Rover::Configure(LoRaPacket packet)
 {
-    RoverConfiguration configPayload = packet.payload.roverConfiguration;
+    RoverConfiguration configPayload = packet.payload.rover_configuration;
 
     ResetConfiguration();
 
