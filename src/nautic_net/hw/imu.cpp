@@ -133,14 +133,12 @@ void IMU::Loop()
 
         // TODO: Compass smoothing based on gyro
 
-        if (nautic_net::config::kEnableIMULogging)
+        if (nautic_net::config::kEnableSerialStudioIMULogging)
         {
-            // Serial.print(mag_x_compensated);
-            // Serial.print(',');
-            // Serial.print(mag_y_compensated);
-            // Serial.print(',');
-            // Serial.println(mag_z);
-
+            //
+            // CSV output for Serial Studio. See serial-studio/boat-tracker-mini.json for the config.
+            // https://serial-studio.github.io/
+            //
             Serial.print("/*");
             Serial.print(pitch_ * 180.0 / PI);
             Serial.print(",");

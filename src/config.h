@@ -38,8 +38,8 @@ namespace nautic_net::config
     };
 
     // Serial logging configuration
-    static const bool kEnableBell = false;       // Print \a when receiving data
-    static const bool kEnableIMULogging = false; // Output for Serial Studio
+    static const bool kEnableBell = false;                   // Print \a when receiving data
+    static const bool kEnableSerialStudioIMULogging = false; // Output for Serial Studio
 
     // Pins
     static const int kPinGPSPPS = A5;      // Hardwire
