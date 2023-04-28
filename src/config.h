@@ -28,7 +28,7 @@ namespace nautic_net::config
     // The FIXED radio mode for rover discovery and configuration (slots 0 and 1)
     static const nautic_net::hw::radio::Config kLoraDefaultConfig = {
         .sbw = 500, // kHz (125, 250, or 500)
-        .sf = 9     // Spreading factor (7 through 12)
+        .sf = 7     // Spreading factor (7 through 12)
     };
 
     // The CONFIGURABLE radio mode for rover data, which is handed out to the rovers from the base
