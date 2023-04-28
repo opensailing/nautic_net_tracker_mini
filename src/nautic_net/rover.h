@@ -19,7 +19,7 @@ namespace nautic_net::rover
     class Rover
     {
     public:
-        Rover(nautic_net::hw::radio::Radio *radio, nautic_net::hw::gps::GPS *gps, nautic_net::hw::imu::IMU *imu);
+        Rover(nautic_net::hw::radio::Radio *radio, nautic_net::hw::gps::GPS *gps, nautic_net::hw::imu::IMU *imu, nautic_net::hw::eeprom::EEPROM *eeprom);
         void Setup();
         void Loop();
         void HandlePacket(LoRaPacket packet, int rssi);
@@ -30,6 +30,7 @@ namespace nautic_net::rover
         nautic_net::hw::radio::Radio *radio_;
         nautic_net::hw::gps::GPS *gps_;
         nautic_net::hw::imu::IMU *imu_;
+        nautic_net::hw::eeprom::EEPROM *eeprom_;
         RoverState state_;
 
         // Calibration switch debouncing

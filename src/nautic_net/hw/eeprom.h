@@ -25,6 +25,9 @@ namespace nautic_net::hw::eeprom
         void WriteCompassCalibration(CompassCalibration cal);
         CompassCalibration ReadCompassCalibration();
 
+        uint32_t serial_number_;
+        CompassCalibration compass_calibration_;
+
     private:
         static const uint8_t kI2CAddress = 0x50;
         static const unsigned int kFirstByte = 0x00;
@@ -34,8 +37,6 @@ namespace nautic_net::hw::eeprom
 
         bool initialized_;
         Adafruit_EEPROM_I2C eeprom_;
-        uint32_t serial_number_;
-        CompassCalibration compass_calibration_;
     };
 }
 

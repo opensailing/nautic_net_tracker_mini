@@ -22,7 +22,7 @@ hw::eeprom::EEPROM kEEPROM;
 hw::radio::Radio kRadio;
 hw::imu::IMU kIMU(&kEEPROM);
 hw::gps::GPS kGPS(&Serial1, config::kPinGPSPPS);
-rover::Rover kRover(&kRadio, &kGPS, &kIMU);
+rover::Rover kRover(&kRadio, &kGPS, &kIMU, &kEEPROM);
 base::Base kBase(&kRadio);
 tdma::TDMA kTDMA;
 

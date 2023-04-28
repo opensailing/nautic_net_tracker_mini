@@ -6,7 +6,8 @@
 
 using namespace nautic_net::rover;
 
-Rover::Rover(nautic_net::hw::radio::Radio *radio, nautic_net::hw::gps::GPS *gps, nautic_net::hw::imu::IMU *imu) : radio_(radio), gps_(gps), imu_(imu)
+Rover::Rover(nautic_net::hw::radio::Radio *radio, nautic_net::hw::gps::GPS *gps, nautic_net::hw::imu::IMU *imu, nautic_net::hw::eeprom::EEPROM *eeprom)
+    : radio_(radio), gps_(gps), imu_(imu), eeprom_(eeprom)
 {
 }
 
@@ -112,7 +113,7 @@ void Rover::SendData()
     }
 
     LoRaPacket packet;
-    packet.hardwareID = util::get_hardware_id();
+    packet.hardwareID = eeprom_->serial_number_;
     packet.payload.roverData = data;
     packet.which_payload = LoRaPacket_roverData_tag;
 
