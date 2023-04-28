@@ -57,8 +57,9 @@ void Rover::HandleSlot(tdma::Slot slot)
 
     if (state_ == RoverState::kUnconfigured && slot.type == tdma::SlotType::kRoverDiscovery)
     {
-        // Add 50ms random delay to prevent 100% collisions
-        delay(random(50));
+        // Add 80ms random delay to avoid collisions if many devices are trying to be discovered at once
+        // (discovery message duration is ~12ms at 500kHz/SF7)
+        delay(random(80));
         SendDiscovery();
     }
     else if (state_ == RoverState::kConfigured && IsMyTransmitSlot(slot))
