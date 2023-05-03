@@ -18,4 +18,7 @@ PB_BIND(RoverDiscovery, RoverDiscovery, AUTO)
 PB_BIND(RoverConfiguration, RoverConfiguration, 2)
 
 
+PB_BIND(RoverReset, RoverReset, AUTO)
+
+
 

@@ -130,6 +130,13 @@ void Rover::HandlePacket(LoRaPacket packet, int rssi)
     {
         Configure(packet);
     }
+
+    // Allow the base station to reset us (hardware_id 0 is destined for ALL rovers)
+    if (packet.which_payload == LoRaPacket_rover_reset_tag && (packet.hardware_id == 0 || packet.hardware_id == util::get_hardware_id()))
+    {
+        debugln("Got reset packet");
+        ResetConfiguration();
+    }
 }
 
 void Rover::Configure(LoRaPacket packet)

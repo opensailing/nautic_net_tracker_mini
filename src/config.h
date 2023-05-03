@@ -8,6 +8,7 @@
 
 // Uncomment to enable debug() and debugln() macros for printing to Serial
 // #define SERIAL_DEBUG
+// #define WAIT_FOR_SERIAL
 
 namespace nautic_net::config
 {

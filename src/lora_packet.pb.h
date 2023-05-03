@@ -31,6 +31,10 @@ typedef struct _RoverConfiguration {
     uint32_t sf;
 } RoverConfiguration;
 
+typedef struct _RoverReset {
+    char dummy_field;
+} RoverReset;
+
 typedef struct _LoRaPacket {
     uint32_t hardware_id;
     pb_size_t which_payload;
@@ -38,6 +42,7 @@ typedef struct _LoRaPacket {
         RoverData rover_data;
         RoverDiscovery rover_discovery;
         RoverConfiguration rover_configuration;
+        RoverReset rover_reset;
     } payload;
     uint32_t serial_number;
 } LoRaPacket;
@@ -52,10 +57,12 @@ extern "C" {
 #define RoverData_init_default                   {0, 0, 0, 0, 0, 0, 0}
 #define RoverDiscovery_init_default              {0}
 #define RoverConfiguration_init_default          {0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 0}
+#define RoverReset_init_default                  {0}
 #define LoRaPacket_init_zero                     {0, 0, {RoverData_init_zero}, 0}
 #define RoverData_init_zero                      {0, 0, 0, 0, 0, 0, 0}
 #define RoverDiscovery_init_zero                 {0}
 #define RoverConfiguration_init_zero             {0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 0, 0}
+#define RoverReset_init_zero                     {0}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define RoverData_latitude_tag                   1
@@ -72,6 +79,7 @@ extern "C" {
 #define LoRaPacket_rover_data_tag                2
 #define LoRaPacket_rover_discovery_tag           3
 #define LoRaPacket_rover_configuration_tag       4
+#define LoRaPacket_rover_reset_tag               6
 #define LoRaPacket_serial_number_tag             5
 
 /* Struct field encoding specification for nanopb */
@@ -80,12 +88,14 @@ X(a, STATIC,   SINGULAR, FIXED32,  hardware_id,       1) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,rover_data,payload.rover_data),   2) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,rover_discovery,payload.rover_discovery),   3) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,rover_configuration,payload.rover_configuration),   4) \
-X(a, STATIC,   SINGULAR, UINT32,   serial_number,     5)
+X(a, STATIC,   SINGULAR, UINT32,   serial_number,     5) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,rover_reset,payload.rover_reset),   6)
 #define LoRaPacket_CALLBACK NULL
 #define LoRaPacket_DEFAULT NULL
 #define LoRaPacket_payload_rover_data_MSGTYPE RoverData
 #define LoRaPacket_payload_rover_discovery_MSGTYPE RoverDiscovery
 #define LoRaPacket_payload_rover_configuration_MSGTYPE RoverConfiguration
+#define LoRaPacket_payload_rover_reset_MSGTYPE RoverReset
 
 #define RoverData_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, FLOAT,    latitude,          1) \
@@ -110,22 +120,30 @@ X(a, STATIC,   SINGULAR, UINT32,   sf,                3)
 #define RoverConfiguration_CALLBACK NULL
 #define RoverConfiguration_DEFAULT NULL
 
+#define RoverReset_FIELDLIST(X, a) \
+
+#define RoverReset_CALLBACK NULL
+#define RoverReset_DEFAULT NULL
+
 extern const pb_msgdesc_t LoRaPacket_msg;
 extern const pb_msgdesc_t RoverData_msg;
 extern const pb_msgdesc_t RoverDiscovery_msg;
 extern const pb_msgdesc_t RoverConfiguration_msg;
+extern const pb_msgdesc_t RoverReset_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define LoRaPacket_fields &LoRaPacket_msg
 #define RoverData_fields &RoverData_msg
 #define RoverDiscovery_fields &RoverDiscovery_msg
 #define RoverConfiguration_fields &RoverConfiguration_msg
+#define RoverReset_fields &RoverReset_msg
 
 /* Maximum encoded size of messages (where known) */
 #define LoRaPacket_size                          1126
 #define RoverConfiguration_size                  1112
 #define RoverData_size                           40
 #define RoverDiscovery_size                      0
+#define RoverReset_size                          0
 
 #ifdef __cplusplus
 } /* extern "C" */

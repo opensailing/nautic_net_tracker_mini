@@ -56,7 +56,7 @@ void setup()
 
   // Serial and debug
   Serial.begin(115200);
-  // debugWait();
+  debugWait();
 
   // Configure hardware
   kEEPROM.Setup();
@@ -152,6 +152,7 @@ void loop()
       case 'b': // Convert to base station mode
         debugln("--- BASE STATION ---");
         kMode = Mode::kBase;
+        kBase.ResetConfiguration();
         break;
 
       case 'c': // Begin compass cal

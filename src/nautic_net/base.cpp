@@ -95,10 +95,30 @@ void Base::HandleSlot(tdma::Slot slot)
 
     if (slot.type == tdma::SlotType::kRoverConfiguration)
     {
-        LoRaPacket config_packet;
-        if (TryPopConfigPacket(&config_packet))
+        if (reset_sent_count_ < 5)
         {
-            radio_->Send(config_packet);
+            // Send a bunch of RoverReset packets at the beginning
+            RoverReset rover_reset;
+            rover_reset.dummy_field = 0;
+
+            LoRaPacket reset_packet;
+            reset_packet.hardware_id = 0;   // to all rovers
+            reset_packet.serial_number = 0; // don't care
+            reset_packet.which_payload = LoRaPacket_rover_reset_tag;
+            reset_packet.payload.rover_reset = rover_reset;
+
+            debugln("Sending reset packet to all");
+            radio_->Send(reset_packet);
+
+            reset_sent_count_++;
+        }
+        else
+        {
+            LoRaPacket config_packet;
+            if (TryPopConfigPacket(&config_packet))
+            {
+                radio_->Send(config_packet);
+            }
         }
     }
 }
@@ -161,4 +181,11 @@ int Base::FindRoverIndex(unsigned int hardware_id)
     }
 
     return -1;
+}
+
+void Base::ResetConfiguration()
+{
+    reset_sent_count_ = 0;
+    rover_count_ = 0;
+    next_base_slot_ = 0;
 }
