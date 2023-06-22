@@ -130,6 +130,7 @@ void IMU::Loop()
         // Finally calculate compass angle
         float compass_rad = atan2(mag_y_compensated, mag_x_compensated);
         float compass_deg = compass_rad * kRadToDeg;
+        compass_angle_deg_ = compass_deg < 0 ? compass_deg + 360.0 : compass_deg; // wrap from 0° to 360°
 
         // TODO: Compass smoothing based on gyro
 
@@ -148,7 +149,7 @@ void IMU::Loop()
             Serial.print(",");
             Serial.print(mag_y_compensated);
             Serial.print(",");
-            Serial.print(compass_deg < 0 ? compass_deg + 360.0 : compass_deg);
+            Serial.print(compass_angle_deg_);
             Serial.print(",");
             Serial.print(mag_x);
             Serial.print(",");
