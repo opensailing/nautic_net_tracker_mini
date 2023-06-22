@@ -72,8 +72,11 @@ size_t Radio::Send(LoRaPacket packet)
     unsigned long started_at = millis();
     kRF95.send((uint8_t *)buffer, stream.bytes_written);
     kRF95.waitPacketSent();
-    long airtime = millis() - started_at;
     digitalWrite(LED_BUILTIN, LOW);
+
+#ifdef SERIAL_DEBUG
+    long airtime = millis() - started_at;
+#endif
 
     debug("TX   -> ");
     debug(stream.bytes_written);
