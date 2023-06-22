@@ -233,8 +233,10 @@ void PrintEEPROM()
   nautic_net::hw::eeprom::CompassCalibration cal = kEEPROM.ReadCompassCalibration();
   Serial.print("Compass cal X: ");
   Serial.println(cal.x);
+
   Serial.print("Compass cal Y: ");
   Serial.println(cal.y);
+
   Serial.print("Compass cal Z: ");
   Serial.println(cal.z);
 }
@@ -242,12 +244,22 @@ void PrintEEPROM()
 void PrintStatus()
 {
   Serial.println("--- STATUS ---");
+
   Serial.print("Battery: ");
   Serial.print(util::ReadBatteryVoltage(), 2);
-  Serial.println("V");
-  Serial.print("Battery: ");
+  Serial.print("V (");
   Serial.print(util::ReadBatteryPercentage());
-  Serial.println("%");
+  Serial.println("%)");
+
+  Serial.print("Mode: ");
+  if (kMode == Mode::kBase)
+  {
+    Serial.println("Base Station");
+  }
+  else
+  {
+    Serial.println("Rover");
+  }
 }
 
 void PrintNarwin()

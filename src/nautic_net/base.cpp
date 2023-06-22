@@ -148,25 +148,25 @@ void Base::PrintRoverData(LoRaPacket packet, int rssi)
     {
         Serial.print('\a');
     }
-    Serial.print("BOAT,");
+    Serial.print("BOAT rssi:");
     Serial.print(rssi);
-    Serial.print(',');
+    Serial.print(" hwid:");
     Serial.print(packet.hardware_id, 16);
-    Serial.print(',');
+    Serial.print(" lat:");
     Serial.print(packet.payload.rover_data.latitude, 8);
-    Serial.print(',');
+    Serial.print(" lon:");
     Serial.print(packet.payload.rover_data.longitude, 8);
-    Serial.print(',');
+    Serial.print(" heading:");
     Serial.print(packet.payload.rover_data.heading);
-    Serial.print(',');
+    Serial.print(" heel:");
     Serial.print(packet.payload.rover_data.heel);
-    Serial.print(',');
+    Serial.print(" sog:");
     Serial.print(packet.payload.rover_data.sog);
-    Serial.print(',');
+    Serial.print(" cog:");
     Serial.print(packet.payload.rover_data.cog);
-    Serial.print(',');
+    Serial.print(" bat:");
     Serial.print(packet.payload.rover_data.battery);
-    Serial.print(',');
+    Serial.print(" serial:");
     Serial.println(packet.serial_number);
 }
 
