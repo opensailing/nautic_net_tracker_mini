@@ -68,8 +68,11 @@ size_t Radio::Send(LoRaPacket packet)
     pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
     pb_encode(&stream, LoRaPacket_fields, &packet);
 
-    digitalWrite(LED_BUILTIN, HIGH);
+#ifdef SERIAL_DEBUG
     unsigned long started_at = millis();
+#endif
+
+    digitalWrite(LED_BUILTIN, HIGH);
     kRF95.send((uint8_t *)buffer, stream.bytes_written);
     kRF95.waitPacketSent();
     digitalWrite(LED_BUILTIN, LOW);
