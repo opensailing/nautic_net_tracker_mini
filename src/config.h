@@ -12,6 +12,9 @@
 
 namespace nautic_net::config
 {
+    // Firmware version - follow SemVer (https://semver.org/)
+    static const String kFirmwareVersion = "1.0.0";
+
     // TDMA configuration
     static const int kCycleDurationSec = 10;  // sec, must divide evenly into 60
     static const int kSlotCount = 100;        // Total number of slots available
@@ -47,6 +50,7 @@ namespace nautic_net::config
     static const int kPinBaseMode = A0;    // Jumper
     static const int kPinBattery = A7;     // Hardwired voltage divider (Vbat/2) on Feather M0
     static const int kPinCalibration = A1; // Calibration switch
+
 }
 
 #endif

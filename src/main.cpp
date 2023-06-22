@@ -245,6 +245,9 @@ void PrintStatus()
 {
   Serial.println("--- STATUS ---");
 
+  Serial.print("Firmware: ");
+  Serial.println(config::kFirmwareVersion);
+
   Serial.print("Battery: ");
   Serial.print(util::ReadBatteryVoltage(), 2);
   Serial.print("V (");
