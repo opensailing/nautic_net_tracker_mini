@@ -141,11 +141,17 @@ void loop()
     char byte = Serial.read();
     serial_buffer_[serial_buffer_index_] = byte;
 
-    // Use line feed (LF) as the line separator (NO CR OR CRLF, PLEASE AND THANK YOU)
+    // Use line feed (LF) as the line separator
     if (byte == '\n')
     {
       // Replace \n with null terminator
       serial_buffer_[serial_buffer_index_] = 0;
+
+      // If a CRLF ("\r\n") was used as the line terminator, replace \r with null terminator, too
+      if (serial_buffer_index_ >= 1 && serial_buffer_[serial_buffer_index_ - 1] == '\r')
+      {
+        serial_buffer_[serial_buffer_index_ - 1] = 0;
+      }
 
       switch (serial_buffer_[0])
       {
