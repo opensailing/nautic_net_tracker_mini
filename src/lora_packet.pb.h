@@ -10,6 +10,7 @@
 #endif
 
 /* Struct definitions */
+/* A sample of data from the rover */
 typedef struct _RoverData {
     float latitude; /* degrees */
     float longitude; /* degrees */
@@ -20,22 +21,30 @@ typedef struct _RoverData {
     uint32_t battery; /* percent, 0 implies null */
 } RoverData;
 
+/* Message from a newly-powered-on rover, asking base station for configuration */
 typedef struct _RoverDiscovery {
     char dummy_field;
 } RoverDiscovery;
 
+/* Message from the base station to a new rover, configuring it for communication */
 typedef struct _RoverConfiguration {
+    /* TDMA slot numbers during which the rover is allowed to send RoverData */
     pb_size_t slots_count;
     int32_t slots[100];
+    /* LoRa bandwidth (kHz) when sending RoverData */
     uint32_t sbw;
+    /* LoRa spreading factor when sending RoverData */
     uint32_t sf;
 } RoverConfiguration;
 
+/* Message from the base station telling a rover to soft-reset and attempt discovery again,
+ useful for when the base station has just powered on to ensure that rovers are reinitialized */
 typedef struct _RoverReset {
     char dummy_field;
 } RoverReset;
 
 typedef struct _LoRaPacket {
+    /* The fixed hardware identifier for the rover, based on the serial number of the ARM Cortex chip */
     uint32_t hardware_id;
     pb_size_t which_payload;
     union {
@@ -44,6 +53,7 @@ typedef struct _LoRaPacket {
         RoverConfiguration rover_configuration;
         RoverReset rover_reset;
     } payload;
+    /* A logical, human-friendly identifier for the rover */
     uint32_t serial_number;
 } LoRaPacket;
 
