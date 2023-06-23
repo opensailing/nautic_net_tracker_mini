@@ -94,9 +94,10 @@ void Rover::SendData()
     // These values are fixed-point integers with 0.1 precision
     uint32_t encoded_cog = (uint32_t)(gps_->gps_.angle * 10);
     uint32_t encoded_sog = (uint32_t)(gps_->gps_.speed * 10);
+    uint32_t encoded_heading = (uint32_t)(imu_->compass_angle_deg_ * 10);
 
     RoverData data;
-    data.heading = (uint32_t)imu_->compass_angle_deg_;
+    data.heading = encoded_heading;
     data.heel = encoded_heel_angle;
     data.latitude = gps_->gps_.latitudeDegrees;
     data.longitude = gps_->gps_.longitudeDegrees;
