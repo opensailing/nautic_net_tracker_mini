@@ -13,7 +13,7 @@
 namespace nautic_net::config
 {
     // Firmware version - follow SemVer (https://semver.org/)
-    static const String kFirmwareVersion = "1.0.0";
+    static const String kFirmwareVersion = "1.0.1";
 
     // TDMA configuration
     static const int kCycleDurationSec = 10;  // sec, must divide evenly into 60

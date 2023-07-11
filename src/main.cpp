@@ -58,14 +58,19 @@ void setup()
   Serial.begin(115200);
   debugWait();
 
-  // Configure hardware
-  kEEPROM.Setup();
-  kIMU.Setup();
+  // Configure rover-only hardware
+  if (kMode == Mode::kRover)
+  {
+    kEEPROM.Setup();
+    kIMU.Setup();
+    kRover.Setup();
+  }
+
+  // Configure common hardware
   kRadio.Setup();
-  kRover.Setup();
   kGPS.Setup();
 
-  // Don't continue until GPS has a fix, because we need accurate timing
+  // Can't continue until GPS has a fix, because we need accurate timing
   kGPS.WaitForFix();
 }
 
@@ -155,12 +160,6 @@ void loop()
 
       switch (serial_buffer_[0])
       {
-      case 'b': // Convert to base station mode
-        debugln("--- BASE STATION ---");
-        kMode = Mode::kBase;
-        kBase.ResetConfiguration();
-        break;
-
       case 'c': // Begin compass cal
         kIMU.BeginCompassCalibration();
         break;
@@ -171,12 +170,6 @@ void loop()
 
       case 'f': // Finish compass cal
         kIMU.FinishCompassCalibration();
-        break;
-
-      case 'r': // Convert to rover mode (and reset any existing rover config)
-        debugln("--- ROVER ---");
-        kMode = Mode::kRover;
-        kRover.ResetConfiguration();
         break;
 
       case 's': // Read or write serial number
